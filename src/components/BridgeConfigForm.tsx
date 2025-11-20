@@ -42,7 +42,9 @@ export const BridgeConfigForm = () => {
       errors.netmask = "Invalid netmask format";
     }
 
-    if (config.gateway && !validateIPAddress(config.gateway)) {
+    if (!config.gateway.trim()) {
+      errors.gateway = "Gateway is required";
+    } else if (!validateIPAddress(config.gateway)) {
       errors.gateway = "Invalid gateway IP address";
     }
 
@@ -301,8 +303,8 @@ export const BridgeConfigForm = () => {
 
             {/* Gateway */}
             <div>
-              <Label htmlFor="gateway" className="text-foreground">
-                Gateway
+            <Label htmlFor="gateway" className="text-foreground">
+                Gateway <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="gateway"
@@ -320,7 +322,7 @@ export const BridgeConfigForm = () => {
                   {validationErrors.gateway}
                 </div>
               )}
-              <p className="text-xs text-muted-foreground mt-1">Default gateway (optional)</p>
+              <p className="text-xs text-muted-foreground mt-1">Default gateway for network routing</p>
             </div>
 
             {/* DNS */}

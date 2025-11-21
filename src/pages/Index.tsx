@@ -1,6 +1,7 @@
 import { BridgeConfigForm } from "@/components/BridgeConfigForm";
-import { Network, Info } from "lucide-react";
+import { Network, Info, Activity } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { ToolNav } from "@/components/ToolNav";
 
 const Index = () => {
   return (
@@ -20,6 +21,16 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
+        {/* Navigation */}
+        <div className="mb-8">
+          <ToolNav
+            items={[
+              { to: "/", icon: Activity, label: "Bridge Generator" },
+              { to: "/subnet-calculator", icon: Network, label: "Subnet Calculator" },
+            ]}
+          />
+        </div>
+
         {/* Info Card */}
         <Card className="p-4 mb-6 bg-accent/10 border-accent/20">
           <div className="flex gap-3">

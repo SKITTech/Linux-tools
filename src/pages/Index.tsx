@@ -1,5 +1,5 @@
 import { BridgeConfigForm } from "@/components/BridgeConfigForm";
-import { Network, Info, Activity } from "lucide-react";
+import { Network, Info, Activity, Wifi, Globe, Shield, FileText, ShieldAlert } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ToolNav } from "@/components/ToolNav";
 
@@ -27,6 +27,11 @@ const Index = () => {
             items={[
               { to: "/", icon: Activity, label: "Bridge Generator" },
               { to: "/subnet-calculator", icon: Network, label: "Subnet Calculator" },
+              { to: "/network-diagnostics", icon: Wifi, label: "Network Diagnostics" },
+              { to: "/ipv6-converter", icon: Globe, label: "IPv6 Converter" },
+              { to: "/firewall-generator", icon: Shield, label: "Firewall Generator" },
+              { to: "/log-analyzer", icon: FileText, label: "Log Analyzer" },
+              { to: "/security-audit", icon: ShieldAlert, label: "Security Audit" },
             ]}
           />
         </div>

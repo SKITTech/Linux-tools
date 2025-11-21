@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Network, AlertCircle, Copy, CheckCircle2, Activity } from "lucide-react";
+import { Network, AlertCircle, Copy, CheckCircle2, Activity, Wifi, Globe, Shield, FileText, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { ToolNav } from "@/components/ToolNav";
 
@@ -230,6 +230,11 @@ Private Address: ${result.isPrivate ? "Yes" : "No"}
           items={[
             { to: "/", icon: Activity, label: "Bridge Generator" },
             { to: "/subnet-calculator", icon: Network, label: "Subnet Calculator" },
+            { to: "/network-diagnostics", icon: Wifi, label: "Network Diagnostics" },
+            { to: "/ipv6-converter", icon: Globe, label: "IPv6 Converter" },
+            { to: "/firewall-generator", icon: Shield, label: "Firewall Generator" },
+            { to: "/log-analyzer", icon: FileText, label: "Log Analyzer" },
+            { to: "/security-audit", icon: ShieldAlert, label: "Security Audit" },
           ]}
         />
 

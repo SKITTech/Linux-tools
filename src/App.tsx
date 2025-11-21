@@ -5,6 +5,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import SubnetCalculator from "./pages/SubnetCalculator";
+import NetworkDiagnostics from "./pages/NetworkDiagnostics";
+import IPv6Converter from "./pages/IPv6Converter";
+import FirewallGenerator from "./pages/FirewallGenerator";
+import LogAnalyzer from "./pages/LogAnalyzer";
+import SecurityAudit from "./pages/SecurityAudit";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -18,6 +23,11 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/subnet-calculator" element={<SubnetCalculator />} />
+          <Route path="/network-diagnostics" element={<NetworkDiagnostics />} />
+          <Route path="/ipv6-converter" element={<IPv6Converter />} />
+          <Route path="/firewall-generator" element={<FirewallGenerator />} />
+          <Route path="/log-analyzer" element={<LogAnalyzer />} />
+          <Route path="/security-audit" element={<SecurityAudit />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

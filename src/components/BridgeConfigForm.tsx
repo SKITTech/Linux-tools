@@ -17,11 +17,15 @@ export const BridgeConfigForm = () => {
   const [config, setConfig] = useState<NetworkConfig>({
     ipAddress: "",
     netmask: "255.255.255.0",
-    bridgeName: "br0",
+    bridgeName: "viifbr0",
     interfaces: "",
     gateway: "",
     dns: "",
-    os: "ubuntu-18.04-hetzner",
+    os: "centos-7",
+    enableIPv6: false,
+    ipv6Address: "",
+    ipv6Gateway: "",
+    ipv6Prefix: "64",
     enableBonding: false,
     bondName: "bond0",
     bondMode: "mode-1",
@@ -201,6 +205,70 @@ export const BridgeConfigForm = () => {
               />
               <p className="text-xs text-muted-foreground mt-1">Name for the bridge interface</p>
             </div>
+
+            {/* IPv6 Toggle */}
+            <div className="flex items-center justify-between p-4 bg-accent/10 rounded-lg border border-accent/20">
+              <div>
+                <Label htmlFor="enableIPv6" className="text-foreground font-medium">
+                  Enable IPv6
+                </Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Configure IPv6 address for the bridge
+                </p>
+              </div>
+              <Switch
+                id="enableIPv6"
+                checked={config.enableIPv6}
+                onCheckedChange={(checked) => setConfig({ ...config, enableIPv6: checked })}
+              />
+            </div>
+
+            {/* IPv6 Configuration */}
+            {config.enableIPv6 && (
+              <>
+                <div>
+                  <Label htmlFor="ipv6Address" className="text-foreground">
+                    IPv6 Address <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="ipv6Address"
+                    placeholder="2001:db8::1"
+                    value={config.ipv6Address}
+                    onChange={(e) => setConfig({ ...config, ipv6Address: e.target.value })}
+                    className="mt-1.5 bg-background border-input"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">IPv6 address for the bridge</p>
+                </div>
+
+                <div>
+                  <Label htmlFor="ipv6Prefix" className="text-foreground">
+                    IPv6 Prefix Length <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="ipv6Prefix"
+                    placeholder="64"
+                    value={config.ipv6Prefix}
+                    onChange={(e) => setConfig({ ...config, ipv6Prefix: e.target.value })}
+                    className="mt-1.5 bg-background border-input"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Typically 64 for most networks</p>
+                </div>
+
+                <div>
+                  <Label htmlFor="ipv6Gateway" className="text-foreground">
+                    IPv6 Gateway <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="ipv6Gateway"
+                    placeholder="2001:db8::1"
+                    value={config.ipv6Gateway}
+                    onChange={(e) => setConfig({ ...config, ipv6Gateway: e.target.value })}
+                    className="mt-1.5 bg-background border-input"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Default IPv6 gateway</p>
+                </div>
+              </>
+            )}
 
             {/* Bonding Toggle */}
             <div className="flex items-center justify-between p-4 bg-accent/10 rounded-lg border border-accent/20">

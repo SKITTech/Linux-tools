@@ -9,14 +9,10 @@ export const generateCommands = (config: NetworkConfig): string => {
   }
   
   switch (os) {
-    case "ubuntu-18.04-hetzner":
-      return generateUbuntu1804Hetzner(config);
-    case "ubuntu-18.04-generic":
-      return generateUbuntu1804Generic(config);
-    case "ubuntu-20.04":
-      return generateUbuntu2004(config);
-    case "ubuntu-22.04":
-      return generateUbuntu2204(config);
+    case "ubuntu-16.04":
+      return generateUbuntu1604(config);
+    case "ubuntu-18.04":
+      return generateUbuntu1804(config);
     case "centos-7":
       return generateCentOS7(config);
     case "almalinux":
@@ -26,9 +22,71 @@ export const generateCommands = (config: NetworkConfig): string => {
   }
 };
 
-const generateUbuntu1804Hetzner = (config: NetworkConfig): string => {
+const generateUbuntu1604 = (config: NetworkConfig): string => {
   const cidr = netmaskToCIDR(config.netmask);
-  let commands = `# Ubuntu 18.04 (Hetzner Method) - /etc/netplan/01-netcfg.yaml\n\n`;
+  const interfaceList = config.interfaces.split(',').map(s => s.trim()).filter(s => s);
+  
+  let commands = `# Ubuntu 16.04 - Bridge Configuration (/etc/network/interfaces)\n\n`;
+  commands += `# Backup current configuration\n`;
+  commands += `sudo cp /etc/network/interfaces /etc/network/interfaces.backup\n\n`;
+  commands += `# Install bridge utilities\n`;
+  commands += `sudo apt-get update\n`;
+  commands += `sudo apt-get install -y bridge-utils\n\n`;
+  
+  commands += `cat << 'EOF' >> /etc/network/interfaces\n\n`;
+  
+  if (config.enableBonding) {
+    const slaves = config.bondSlaves.split(',').map(s => s.trim()).filter(s => s);
+    commands += `# Bond configuration\n`;
+    commands += `auto ${config.bondName}\n`;
+    commands += `iface ${config.bondName} inet manual\n`;
+    commands += `    bond-mode ${config.bondMode === 'mode-1' ? 'active-backup' : '802.3ad'}\n`;
+    commands += `    bond-miimon 100\n`;
+    commands += `    bond-slaves ${slaves.join(' ')}\n\n`;
+    
+    commands += `# Bridge configuration\n`;
+    commands += `auto ${config.bridgeName}\n`;
+    commands += `iface ${config.bridgeName} inet static\n`;
+    commands += `    bridge_ports ${config.bondName}\n`;
+  } else {
+    commands += `# Bridge configuration\n`;
+    commands += `auto ${config.bridgeName}\n`;
+    commands += `iface ${config.bridgeName} inet static\n`;
+    commands += `    bridge_ports ${interfaceList.join(' ')}\n`;
+  }
+  
+  commands += `    address ${config.ipAddress}\n`;
+  commands += `    netmask ${config.netmask}\n`;
+  if (config.gateway) {
+    commands += `    gateway ${config.gateway}\n`;
+  }
+  commands += `    bridge_stp off\n`;
+  commands += `    bridge_fd 0\n`;
+  if (config.dns) {
+    const dnsServers = config.dns.split(',').map(d => d.trim()).filter(d => d);
+    commands += `    dns-nameservers ${dnsServers.join(' ')}\n`;
+  }
+  
+  if (config.enableIPv6 && config.ipv6Address) {
+    commands += `\n# IPv6 configuration\n`;
+    commands += `iface ${config.bridgeName} inet6 static\n`;
+    commands += `    address ${config.ipv6Address}\n`;
+    commands += `    netmask ${config.ipv6Prefix}\n`;
+    if (config.ipv6Gateway) {
+      commands += `    gateway ${config.ipv6Gateway}\n`;
+    }
+  }
+  
+  commands += `EOF\n\n`;
+  commands += `# Restart networking\n`;
+  commands += `sudo systemctl restart networking\n`;
+  
+  return commands;
+};
+
+const generateUbuntu1804 = (config: NetworkConfig): string => {
+  const cidr = netmaskToCIDR(config.netmask);
+  let commands = `# Ubuntu 18.04 and higher - /etc/netplan/01-netcfg.yaml\n\n`;
   
   if (config.enableBonding) {
     commands += `# WARNING: Backup your current network config before applying!\n`;
@@ -74,9 +132,17 @@ const generateUbuntu1804Hetzner = (config: NetworkConfig): string => {
     commands += `      interfaces: [${interfaces.join(', ')}]\n`;
   }
   
-  commands += `      addresses: [${config.ipAddress}/${cidr}]\n`;
+  commands += `      addresses: [${config.ipAddress}/${cidr}`;
+  if (config.enableIPv6 && config.ipv6Address) {
+    commands += `, ${config.ipv6Address}/${config.ipv6Prefix}`;
+  }
+  commands += `]\n`;
+  
   if (config.gateway) {
     commands += `      gateway4: ${config.gateway}\n`;
+  }
+  if (config.enableIPv6 && config.ipv6Gateway) {
+    commands += `      gateway6: ${config.ipv6Gateway}\n`;
   }
   if (config.dns) {
     const dnsServers = config.dns.split(',').map(d => d.trim()).filter(d => d);
@@ -90,68 +156,6 @@ const generateUbuntu1804Hetzner = (config: NetworkConfig): string => {
   return commands;
 };
 
-const generateUbuntu1804Generic = (config: NetworkConfig): string => {
-  const cidr = netmaskToCIDR(config.netmask);
-  const interfaceList = config.interfaces.split(',').map(s => s.trim()).filter(s => s);
-  
-  let commands = `# Ubuntu 18.04 (Generic Method) - Bridge Configuration\n\n`;
-  commands += `# Install bridge utilities\n`;
-  commands += `sudo apt-get update\n`;
-  commands += `sudo apt-get install -y bridge-utils\n\n`;
-  
-  if (config.enableBonding) {
-    const slaves = config.bondSlaves.split(',').map(s => s.trim()).filter(s => s);
-    commands += `# Create bond interface\n`;
-    commands += `sudo modprobe bonding\n`;
-    commands += `sudo ip link add ${config.bondName} type bond mode ${config.bondMode === 'mode-1' ? 'active-backup' : '802.3ad'}\n`;
-    slaves.forEach(slave => {
-      commands += `sudo ip link set ${slave} down\n`;
-      commands += `sudo ip link set ${slave} master ${config.bondName}\n`;
-      commands += `sudo ip link set ${slave} up\n`;
-    });
-    commands += `sudo ip link set ${config.bondName} up\n\n`;
-    
-    commands += `# Create bridge with bond\n`;
-    commands += `sudo ip link add name ${config.bridgeName} type bridge\n`;
-    commands += `sudo ip link set ${config.bondName} master ${config.bridgeName}\n`;
-  } else {
-    commands += `# Create bridge\n`;
-    commands += `sudo ip link add name ${config.bridgeName} type bridge\n`;
-    commands += `sudo ip link set ${config.bridgeName} up\n\n`;
-    
-    commands += `# Add interfaces to bridge\n`;
-    interfaceList.forEach(iface => {
-      commands += `sudo ip link set ${iface} master ${config.bridgeName}\n`;
-      commands += `sudo ip link set ${iface} up\n`;
-    });
-  }
-  
-  commands += `\n# Configure IP address\n`;
-  commands += `sudo ip addr add ${config.ipAddress}/${cidr} dev ${config.bridgeName}\n`;
-  commands += `sudo ip link set ${config.bridgeName} up\n`;
-  
-  if (config.gateway) {
-    commands += `\n# Set default gateway\n`;
-    commands += `sudo ip route add default via ${config.gateway} dev ${config.bridgeName}\n`;
-  }
-  
-  if (config.dns) {
-    commands += `\n# Configure DNS\n`;
-    config.dns.split(',').forEach(dns => {
-      commands += `echo "nameserver ${dns.trim()}" | sudo tee -a /etc/resolv.conf\n`;
-    });
-  }
-  
-  return commands;
-};
-
-const generateUbuntu2004 = (config: NetworkConfig): string => {
-  return generateUbuntu1804Hetzner(config).replace("Ubuntu 18.04", "Ubuntu 20.04");
-};
-
-const generateUbuntu2204 = (config: NetworkConfig): string => {
-  return generateUbuntu1804Hetzner(config).replace("Ubuntu 18.04", "Ubuntu 22.04");
-};
 
 const generateCentOS7 = (config: NetworkConfig): string => {
   const cidr = netmaskToCIDR(config.netmask);
@@ -204,6 +208,13 @@ const generateCentOS7 = (config: NetworkConfig): string => {
   }
   commands += `ONBOOT=yes\n`;
   commands += `DELAY=0\n`;
+  if (config.enableIPv6 && config.ipv6Address) {
+    commands += `IPV6INIT=yes\n`;
+    commands += `IPV6ADDR=${config.ipv6Address}/${config.ipv6Prefix}\n`;
+    if (config.ipv6Gateway) {
+      commands += `IPV6_DEFAULTGW=${config.ipv6Gateway}\n`;
+    }
+  }
   commands += `EOF\n\n`;
   
   if (!config.enableBonding && interfaceList.length > 0) {
@@ -257,8 +268,15 @@ const generateAlmaLinux = (config: NetworkConfig): string => {
       commands += `sudo nmcli connection modify ${config.bridgeName} ipv4.dns "${dnsServers}"\n`;
     }
     
-    // CRITICAL FIX: Add the missing STP line for AlmaLinux
     commands += `sudo nmcli connection modify ${config.bridgeName} bridge.stp no\n`;
+    
+    if (config.enableIPv6 && config.ipv6Address) {
+      commands += `sudo nmcli connection modify ${config.bridgeName} ipv6.addresses ${config.ipv6Address}/${config.ipv6Prefix}\n`;
+      commands += `sudo nmcli connection modify ${config.bridgeName} ipv6.method manual\n`;
+      if (config.ipv6Gateway) {
+        commands += `sudo nmcli connection modify ${config.bridgeName} ipv6.gateway ${config.ipv6Gateway}\n`;
+      }
+    }
     
     commands += `\n# Add bond to bridge\n`;
     commands += `sudo nmcli connection add type bridge-slave con-name bridge-${config.bondName} ifname ${config.bondName} master ${config.bridgeName}\n`;
@@ -277,8 +295,15 @@ const generateAlmaLinux = (config: NetworkConfig): string => {
       commands += `sudo nmcli connection modify ${config.bridgeName} ipv4.dns "${dnsServers}"\n`;
     }
     
-    // CRITICAL FIX: Add the missing STP line for AlmaLinux
     commands += `sudo nmcli connection modify ${config.bridgeName} bridge.stp no\n`;
+    
+    if (config.enableIPv6 && config.ipv6Address) {
+      commands += `sudo nmcli connection modify ${config.bridgeName} ipv6.addresses ${config.ipv6Address}/${config.ipv6Prefix}\n`;
+      commands += `sudo nmcli connection modify ${config.bridgeName} ipv6.method manual\n`;
+      if (config.ipv6Gateway) {
+        commands += `sudo nmcli connection modify ${config.bridgeName} ipv6.gateway ${config.ipv6Gateway}\n`;
+      }
+    }
     
     commands += `\n# Add interfaces to bridge\n`;
     interfaceList.forEach(iface => {
@@ -322,9 +347,17 @@ const generateGenericLinux = (config: NetworkConfig): string => {
   commands += `\n# Configure IP address\n`;
   commands += `ip addr add ${config.ipAddress}/${cidr} dev ${config.bridgeName}\n`;
   
+  if (config.enableIPv6 && config.ipv6Address) {
+    commands += `ip -6 addr add ${config.ipv6Address}/${config.ipv6Prefix} dev ${config.bridgeName}\n`;
+  }
+  
   if (config.gateway) {
     commands += `\n# Set default gateway\n`;
     commands += `ip route add default via ${config.gateway} dev ${config.bridgeName}\n`;
+  }
+  
+  if (config.enableIPv6 && config.ipv6Gateway) {
+    commands += `ip -6 route add default via ${config.ipv6Gateway} dev ${config.bridgeName}\n`;
   }
   
   if (config.dns) {

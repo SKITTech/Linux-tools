@@ -337,64 +337,88 @@ const generateAlmaLinux = (config: NetworkConfig): string => {
     });
     
     commands += `\n# Create bridge\n`;
-    commands += `sudo nmcli connection add type bridge con-name ${config.bridgeName} ifname ${config.bridgeName}\n`;
-    commands += `sudo nmcli connection modify ${config.bridgeName} ipv4.addresses ${config.ipAddress}/${cidr}\n`;
-    commands += `sudo nmcli connection modify ${config.bridgeName} ipv4.method manual\n`;
+    commands += `sudo nmcli connection add type bridge con-name ${config.bridgeName} ifname ${config.bridgeName}\n\n`;
     
+    commands += `# Disable STP (if your server provider blocks ports on switch due to BPDU flooding)\n`;
+    commands += `sudo nmcli connection modify ${config.bridgeName} bridge.stp no\n\n`;
+    
+    // IPv4 configuration
+    const dnsServers = config.dns ? config.dns.split(',').map(d => d.trim()).filter(d => d).join(' ') : '8.8.8.8';
+    commands += `# Configure IPv4\n`;
+    commands += `sudo nmcli connection modify ${config.bridgeName} ipv4.addresses '${config.ipAddress}/${cidr}'`;
     if (config.gateway) {
-      commands += `sudo nmcli connection modify ${config.bridgeName} ipv4.gateway ${config.gateway}\n`;
+      commands += ` ipv4.gateway '${config.gateway}'`;
     }
+    commands += ` ipv4.dns '${dnsServers}' ipv4.method manual\n\n`;
     
-    if (config.dns) {
-      const dnsServers = config.dns.split(',').map(d => d.trim()).filter(d => d).join(' ');
-      commands += `sudo nmcli connection modify ${config.bridgeName} ipv4.dns "${dnsServers}"\n`;
-    }
+    commands += `# Use this only when gateway is of separate range (example, OVH DC)\n`;
+    commands += `# sudo nmcli connection modify ${config.bridgeName} +ipv4.routes "${config.ipAddress}/${cidr} ${config.gateway}"\n\n`;
     
-    commands += `sudo nmcli connection modify ${config.bridgeName} bridge.stp no\n`;
-    
+    // IPv6 configuration
     if (config.enableIPv6 && config.ipv6Address) {
-      commands += `sudo nmcli connection modify ${config.bridgeName} ipv6.addresses ${config.ipv6Address}/${config.ipv6Prefix}\n`;
-      commands += `sudo nmcli connection modify ${config.bridgeName} ipv6.method manual\n`;
+      const ipv6Dns = '2001:4860:4860::8888';
+      commands += `# Configure IPv6\n`;
+      commands += `sudo nmcli connection modify ${config.bridgeName} ipv6.addresses '${config.ipv6Address}/${config.ipv6Prefix}'`;
       if (config.ipv6Gateway) {
-        commands += `sudo nmcli connection modify ${config.bridgeName} ipv6.gateway ${config.ipv6Gateway}\n`;
+        commands += ` ipv6.gateway '${config.ipv6Gateway}'`;
       }
+      commands += ` ipv6.dns '${ipv6Dns}' ipv6.method manual\n\n`;
     }
     
-    commands += `\n# Add bond to bridge\n`;
-    commands += `sudo nmcli connection add type bridge-slave con-name bridge-${config.bondName} ifname ${config.bondName} master ${config.bridgeName}\n`;
+    commands += `# Add bond to bridge\n`;
+    commands += `sudo nmcli connection modify ${config.bondName} master ${config.bridgeName}\n\n`;
+    
+    commands += `# Set autoconnect for slaves\n`;
+    commands += `sudo nmcli connection modify ${config.bridgeName} connection.autoconnect-slaves 1\n\n`;
+    
+    commands += `# Bring up connections\n`;
+    commands += `sudo nmcli connection up ${config.bridgeName}\n`;
+    commands += `sudo nmcli connection up ${config.bondName}\n\n`;
   } else {
     commands += `# Create bridge\n`;
-    commands += `sudo nmcli connection add type bridge con-name ${config.bridgeName} ifname ${config.bridgeName}\n`;
-    commands += `sudo nmcli connection modify ${config.bridgeName} ipv4.addresses ${config.ipAddress}/${cidr}\n`;
-    commands += `sudo nmcli connection modify ${config.bridgeName} ipv4.method manual\n`;
+    commands += `sudo nmcli connection add type bridge con-name ${config.bridgeName} ifname ${config.bridgeName}\n\n`;
     
+    commands += `# Disable STP (if your server provider blocks ports on switch due to BPDU flooding)\n`;
+    commands += `sudo nmcli connection modify ${config.bridgeName} bridge.stp no\n\n`;
+    
+    // IPv4 configuration
+    const dnsServers = config.dns ? config.dns.split(',').map(d => d.trim()).filter(d => d).join(' ') : '8.8.8.8';
+    commands += `# Configure IPv4\n`;
+    commands += `sudo nmcli connection modify ${config.bridgeName} ipv4.addresses '${config.ipAddress}/${cidr}'`;
     if (config.gateway) {
-      commands += `sudo nmcli connection modify ${config.bridgeName} ipv4.gateway ${config.gateway}\n`;
+      commands += ` ipv4.gateway '${config.gateway}'`;
     }
+    commands += ` ipv4.dns '${dnsServers}' ipv4.method manual\n\n`;
     
-    if (config.dns) {
-      const dnsServers = config.dns.split(',').map(d => d.trim()).filter(d => d).join(' ');
-      commands += `sudo nmcli connection modify ${config.bridgeName} ipv4.dns "${dnsServers}"\n`;
-    }
+    commands += `# Use this only when gateway is of separate range (example, OVH DC)\n`;
+    commands += `# sudo nmcli connection modify ${config.bridgeName} +ipv4.routes "${config.ipAddress}/${cidr} ${config.gateway}"\n\n`;
     
-    commands += `sudo nmcli connection modify ${config.bridgeName} bridge.stp no\n`;
-    
+    // IPv6 configuration
     if (config.enableIPv6 && config.ipv6Address) {
-      commands += `sudo nmcli connection modify ${config.bridgeName} ipv6.addresses ${config.ipv6Address}/${config.ipv6Prefix}\n`;
-      commands += `sudo nmcli connection modify ${config.bridgeName} ipv6.method manual\n`;
+      const ipv6Dns = '2001:4860:4860::8888';
+      commands += `# Configure IPv6\n`;
+      commands += `sudo nmcli connection modify ${config.bridgeName} ipv6.addresses '${config.ipv6Address}/${config.ipv6Prefix}'`;
       if (config.ipv6Gateway) {
-        commands += `sudo nmcli connection modify ${config.bridgeName} ipv6.gateway ${config.ipv6Gateway}\n`;
+        commands += ` ipv6.gateway '${config.ipv6Gateway}'`;
       }
+      commands += ` ipv6.dns '${ipv6Dns}' ipv6.method manual\n\n`;
     }
     
-    commands += `\n# Add interfaces to bridge\n`;
+    commands += `# Add interfaces to bridge\n`;
     interfaceList.forEach(iface => {
-      commands += `sudo nmcli connection add type bridge-slave con-name bridge-${iface} ifname ${iface} master ${config.bridgeName}\n`;
+      commands += `sudo nmcli connection modify ${iface} master ${config.bridgeName}\n`;
     });
+    
+    commands += `\n# Set autoconnect for slaves\n`;
+    commands += `sudo nmcli connection modify ${config.bridgeName} connection.autoconnect-slaves 1\n\n`;
+    
+    commands += `# Bring up connections\n`;
+    commands += `sudo nmcli connection up ${config.bridgeName}\n`;
+    interfaceList.forEach(iface => {
+      commands += `sudo nmcli connection up ${iface}\n`;
+    });
+    commands += `\nw\n`;
   }
-  
-  commands += `\n# Bring up the bridge\n`;
-  commands += `sudo nmcli connection up ${config.bridgeName}\n`;
   
   return commands;
 };

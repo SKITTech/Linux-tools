@@ -131,15 +131,16 @@ const generateUbuntu1804Hetzner = (config: NetworkConfig): string => {
   
   commands += `      addresses:\n`;
   commands += `        - ${config.ipAddress}/${cidr}\n`;
-  if (config.enableIPv6 && config.ipv6Address) {
-    commands += `        - ${config.ipv6Address}/${config.ipv6Prefix}\n`;
-  }
   
   if (config.gateway) {
     commands += `      routes:\n`;
     commands += `        - on-link: true\n`;
     commands += `          to: 0.0.0.0/0\n`;
     commands += `          via: ${config.gateway}\n`;
+  }
+  
+  if (config.enableIPv6 && config.ipv6Address) {
+    commands += `        - ${config.ipv6Address}/${config.ipv6Prefix}\n`;
   }
   
   if (config.enableIPv6 && config.ipv6Gateway) {
@@ -201,15 +202,17 @@ const generateUbuntu1804Other = (config: NetworkConfig): string => {
   
   commands += `      addresses:\n`;
   commands += `        - ${config.ipAddress}/${cidr}\n`;
-  if (config.enableIPv6 && config.ipv6Address) {
-    commands += `        - ${config.ipv6Address}/${config.ipv6Prefix}\n`;
-  }
   
   if (config.gateway) {
     commands += `      routes:\n`;
     commands += `        - to: 0.0.0.0/0\n`;
     commands += `          via: ${config.gateway}\n`;
   }
+  
+  if (config.enableIPv6 && config.ipv6Address) {
+    commands += `        - ${config.ipv6Address}/${config.ipv6Prefix}\n`;
+  }
+  
   if (config.enableIPv6 && config.ipv6Gateway) {
     if (!config.gateway) {
       commands += `      routes:\n`;

@@ -134,23 +134,36 @@ const generateUbuntu1804Hetzner = (config: NetworkConfig): string => {
     commands += `      interfaces: [${interfaces.join(', ')}]\n`;
   }
   
-  commands += `      addresses: [${config.ipAddress}/${cidr}`;
+  // Addresses in list format
+  commands += `      addresses:\n`;
+  commands += `        - ${config.ipAddress}/${cidr}\n`;
   if (config.enableIPv6 && config.ipv6Address) {
-    commands += `, ${config.ipv6Address}/${config.ipv6Prefix}`;
+    commands += `        - ${config.ipv6Address}/${config.ipv6Prefix}\n`;
   }
-  commands += `]\n`;
   
+  // Routes section
   if (config.gateway) {
-    commands += `      gateway4: ${config.gateway}\n`;
+    commands += `      routes:\n`;
+    commands += `        - on-link: true\n`;
+    commands += `          to: 0.0.0.0/0\n`;
+    commands += `          via: ${config.gateway}\n`;
   }
+  
+  // IPv6 gateway
   if (config.enableIPv6 && config.ipv6Gateway) {
     commands += `      gateway6: ${config.ipv6Gateway}\n`;
   }
+  
+  // DNS servers
   if (config.dns) {
     const dnsServers = config.dns.split(',').map(d => d.trim()).filter(d => d);
     commands += `      nameservers:\n`;
-    commands += `        addresses: [${dnsServers.join(', ')}]\n`;
+    commands += `        addresses:\n`;
+    dnsServers.forEach(dns => {
+      commands += `          - ${dns}\n`;
+    });
   }
+  
   commands += `EOF\n\n`;
   commands += `# Apply the configuration\n`;
   commands += `sudo netplan apply\n`;

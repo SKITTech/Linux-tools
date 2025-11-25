@@ -20,7 +20,7 @@ export const BridgeConfigForm = () => {
     bridgeName: "viifbr0",
     interfaces: "",
     gateway: "",
-    dns: "",
+    dns: "8.8.8.8,8.8.4.4",
     os: "ubuntu-18.04-hetzner",
     enableIPv6: false,
     ipv6Address: "",
@@ -219,7 +219,15 @@ export const BridgeConfigForm = () => {
               <Switch
                 id="enableIPv6"
                 checked={config.enableIPv6}
-                onCheckedChange={(checked) => setConfig({ ...config, enableIPv6: checked })}
+                onCheckedChange={(checked) =>
+                  setConfig({
+                    ...config,
+                    enableIPv6: checked,
+                    dns: checked
+                      ? "8.8.8.8,8.8.4.4,2001:4860:4860::8888,2001:4860:4860::8844"
+                      : "8.8.8.8,8.8.4.4"
+                  })
+                }
               />
             </div>
 

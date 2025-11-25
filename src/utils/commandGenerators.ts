@@ -88,14 +88,10 @@ const generateUbuntu1604 = (config: NetworkConfig): string => {
 
 const generateUbuntu1804Hetzner = (config: NetworkConfig): string => {
   const cidr = netmaskToCIDR(config.netmask);
-  let commands = `# Ubuntu 18.04 and higher (Hetzner) - /etc/netplan/01-netcfg.yaml\n\n`;
+  let commands = ``;
   
   if (config.enableBonding) {
-    commands += `# WARNING: Backup your current network config before applying!\n`;
-    commands += `# sudo cp /etc/netplan/01-netcfg.yaml /etc/netplan/01-netcfg.yaml.backup\n\n`;
-    
     const slaves = config.bondSlaves.split(',').map(s => s.trim()).filter(s => s);
-    commands += `cat << 'EOF' > /etc/netplan/01-netcfg.yaml\n`;
     commands += `network:\n`;
     commands += `  version: 2\n`;
     commands += `  renderer: networkd\n`;
@@ -119,7 +115,6 @@ const generateUbuntu1804Hetzner = (config: NetworkConfig): string => {
     commands += `      interfaces: [${config.bondName}]\n`;
   } else {
     const interfaces = config.interfaces.split(',').map(s => s.trim()).filter(s => s);
-    commands += `cat << 'EOF' > /etc/netplan/01-netcfg.yaml\n`;
     commands += `network:\n`;
     commands += `  version: 2\n`;
     commands += `  renderer: networkd\n`;
@@ -134,14 +129,12 @@ const generateUbuntu1804Hetzner = (config: NetworkConfig): string => {
     commands += `      interfaces: [${interfaces.join(', ')}]\n`;
   }
   
-  // Addresses in list format
   commands += `      addresses:\n`;
   commands += `        - ${config.ipAddress}/${cidr}\n`;
   if (config.enableIPv6 && config.ipv6Address) {
     commands += `        - ${config.ipv6Address}/${config.ipv6Prefix}\n`;
   }
   
-  // Routes section
   if (config.gateway) {
     commands += `      routes:\n`;
     commands += `        - on-link: true\n`;
@@ -149,12 +142,10 @@ const generateUbuntu1804Hetzner = (config: NetworkConfig): string => {
     commands += `          via: ${config.gateway}\n`;
   }
   
-  // IPv6 gateway
   if (config.enableIPv6 && config.ipv6Gateway) {
     commands += `      gateway6: ${config.ipv6Gateway}\n`;
   }
   
-  // DNS servers
   if (config.dns) {
     const dnsServers = config.dns.split(',').map(d => d.trim()).filter(d => d);
     commands += `      nameservers:\n`;
@@ -164,23 +155,15 @@ const generateUbuntu1804Hetzner = (config: NetworkConfig): string => {
     });
   }
   
-  commands += `EOF\n\n`;
-  commands += `# Apply the configuration\n`;
-  commands += `sudo netplan apply\n`;
-  
   return commands;
 };
 
 const generateUbuntu1804Other = (config: NetworkConfig): string => {
   const cidr = netmaskToCIDR(config.netmask);
-  let commands = `# Ubuntu 18.04 and higher (Other Providers) - /etc/netplan/50-cloud-init.yaml\n\n`;
+  let commands = ``;
   
   if (config.enableBonding) {
-    commands += `# WARNING: Backup your current network config before applying!\n`;
-    commands += `# sudo cp /etc/netplan/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml.backup\n\n`;
-    
     const slaves = config.bondSlaves.split(',').map(s => s.trim()).filter(s => s);
-    commands += `cat << 'EOF' > /etc/netplan/50-cloud-init.yaml\n`;
     commands += `network:\n`;
     commands += `  version: 2\n`;
     commands += `  ethernets:\n`;
@@ -203,7 +186,6 @@ const generateUbuntu1804Other = (config: NetworkConfig): string => {
     commands += `      interfaces: [${config.bondName}]\n`;
   } else {
     const interfaces = config.interfaces.split(',').map(s => s.trim()).filter(s => s);
-    commands += `cat << 'EOF' > /etc/netplan/50-cloud-init.yaml\n`;
     commands += `network:\n`;
     commands += `  version: 2\n`;
     commands += `  ethernets:\n`;
@@ -243,9 +225,6 @@ const generateUbuntu1804Other = (config: NetworkConfig): string => {
       commands += `          - ${dns}\n`;
     });
   }
-  commands += `EOF\n\n`;
-  commands += `# Apply the configuration\n`;
-  commands += `sudo netplan apply\n`;
   
   return commands;
 };

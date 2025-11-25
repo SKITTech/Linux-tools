@@ -99,7 +99,6 @@ const generateUbuntu1804Hetzner = (config: NetworkConfig): string => {
     slaves.forEach(slave => {
       commands += `    ${slave}:\n`;
       commands += `      dhcp4: no\n`;
-      commands += `      dhcp6: no\n`;
     });
     commands += `  bonds:\n`;
     commands += `    ${config.bondName}:\n`;
@@ -122,7 +121,6 @@ const generateUbuntu1804Hetzner = (config: NetworkConfig): string => {
     interfaces.forEach(iface => {
       commands += `    ${iface}:\n`;
       commands += `      dhcp4: no\n`;
-      commands += `      dhcp6: no\n`;
     });
     commands += `  bridges:\n`;
     commands += `    ${config.bridgeName}:\n`;
@@ -140,7 +138,7 @@ const generateUbuntu1804Hetzner = (config: NetworkConfig): string => {
   }
   
   if (config.enableIPv6 && config.ipv6Address) {
-    commands += `        - ${config.ipv6Address}/${config.ipv6Prefix}\n`;
+    commands += `        - "${config.ipv6Address}/${config.ipv6Prefix}"\n`;
   }
   
   if (config.enableIPv6 && config.ipv6Gateway) {

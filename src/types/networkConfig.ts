@@ -15,6 +15,7 @@ export interface NetworkConfig {
   gateway: string;
   dns: string;
   os: OSType;
+  macAddress: string;
   
   // IPv6 options
   enableIPv6: boolean;

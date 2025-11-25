@@ -22,6 +22,7 @@ export const BridgeConfigForm = () => {
     gateway: "",
     dns: "8.8.8.8,8.8.4.4",
     os: "ubuntu-18.04-hetzner",
+    macAddress: "",
     enableIPv6: false,
     ipv6Address: "",
     ipv6Gateway: "",
@@ -204,6 +205,21 @@ export const BridgeConfigForm = () => {
                 className="mt-1.5 bg-background border-input"
               />
               <p className="text-xs text-muted-foreground mt-1">Name for the bridge interface</p>
+            </div>
+
+            {/* MAC Address */}
+            <div>
+              <Label htmlFor="macAddress" className="text-foreground">
+                MAC Address
+              </Label>
+              <Input
+                id="macAddress"
+                placeholder="00:16:3e:7f:ae:93"
+                value={config.macAddress}
+                onChange={(e) => setConfig({ ...config, macAddress: e.target.value })}
+                className="mt-1.5 bg-background border-input"
+              />
+              <p className="text-xs text-muted-foreground mt-1">Optional MAC address for the bridge</p>
             </div>
 
             {/* IPv6 Toggle */}

@@ -129,6 +129,9 @@ const generateUbuntu1804Hetzner = (config: NetworkConfig): string => {
   
   commands += `      addresses:\n`;
   commands += `        - ${config.ipAddress}/${cidr}\n`;
+  if (config.enableIPv6 && config.ipv6Address) {
+    commands += `        - "${config.ipv6Address}/${config.ipv6Prefix}"\n`;
+  }
   
   if (config.gateway) {
     commands += `      routes:\n`;
@@ -137,20 +140,20 @@ const generateUbuntu1804Hetzner = (config: NetworkConfig): string => {
     commands += `          via: ${config.gateway}\n`;
   }
   
-  if (config.enableIPv6 && config.ipv6Address) {
-    commands += `        - "${config.ipv6Address}/${config.ipv6Prefix}"\n`;
-  }
-  
   if (config.enableIPv6 && config.ipv6Gateway) {
     commands += `      gateway6: ${config.ipv6Gateway}\n`;
+  }
+  
+  if (config.macAddress) {
+    commands += `      macaddress: ${config.macAddress}\n`;
   }
   
   if (config.dns) {
     const dnsServers = config.dns.split(',').map(d => d.trim()).filter(d => d);
     commands += `      nameservers:\n`;
-    commands += `        addresses:\n`;
+    commands += `         addresses:\n`;
     dnsServers.forEach(dns => {
-      commands += `          - ${dns}\n`;
+      commands += `           - ${dns}\n`;
     });
   }
   
@@ -200,15 +203,14 @@ const generateUbuntu1804Other = (config: NetworkConfig): string => {
   
   commands += `      addresses:\n`;
   commands += `        - ${config.ipAddress}/${cidr}\n`;
+  if (config.enableIPv6 && config.ipv6Address) {
+    commands += `        - "${config.ipv6Address}/${config.ipv6Prefix}"\n`;
+  }
   
   if (config.gateway) {
     commands += `      routes:\n`;
     commands += `        - to: 0.0.0.0/0\n`;
     commands += `          via: ${config.gateway}\n`;
-  }
-  
-  if (config.enableIPv6 && config.ipv6Address) {
-    commands += `        - ${config.ipv6Address}/${config.ipv6Prefix}\n`;
   }
   
   if (config.enableIPv6 && config.ipv6Gateway) {
@@ -218,6 +220,11 @@ const generateUbuntu1804Other = (config: NetworkConfig): string => {
     commands += `        - to: ::/0\n`;
     commands += `          via: ${config.ipv6Gateway}\n`;
   }
+  
+  if (config.macAddress) {
+    commands += `      macaddress: ${config.macAddress}\n`;
+  }
+  
   if (config.dns) {
     const dnsServers = config.dns.split(',').map(d => d.trim()).filter(d => d);
     commands += `      nameservers:\n`;

@@ -89,7 +89,14 @@ export const BridgeConfigForm = () => {
     }
 
     const commands = generateCommands(config);
-    await navigator.clipboard.writeText(commands);
+    // Filter out comment lines (lines starting with #)
+    const commandsWithoutComments = commands
+      .split('\n')
+      .filter(line => !line.trim().startsWith('#'))
+      .join('\n')
+      .trim();
+    
+    await navigator.clipboard.writeText(commandsWithoutComments);
     setCopied(true);
     toast.success("Commands copied to clipboard!");
     setTimeout(() => setCopied(false), 2000);

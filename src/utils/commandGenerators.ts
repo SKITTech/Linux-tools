@@ -130,7 +130,10 @@ const generateUbuntu1804Hetzner = (config: NetworkConfig): string => {
   commands += `      addresses:\n`;
   commands += `        - ${config.ipAddress}/${cidr}\n`;
   if (config.enableIPv6 && config.ipv6Address) {
-    commands += `        - "${config.ipv6Address}/${config.ipv6Prefix}"\n`;
+    const ipv6WithPrefix = config.ipv6Address.includes('/') 
+      ? config.ipv6Address 
+      : `${config.ipv6Address}/${config.ipv6Prefix}`;
+    commands += `        - "${ipv6WithPrefix}"\n`;
   }
   
   if (config.gateway) {
@@ -204,7 +207,10 @@ const generateUbuntu1804Other = (config: NetworkConfig): string => {
   commands += `      addresses:\n`;
   commands += `        - ${config.ipAddress}/${cidr}\n`;
   if (config.enableIPv6 && config.ipv6Address) {
-    commands += `        - "${config.ipv6Address}/${config.ipv6Prefix}"\n`;
+    const ipv6WithPrefix = config.ipv6Address.includes('/') 
+      ? config.ipv6Address 
+      : `${config.ipv6Address}/${config.ipv6Prefix}`;
+    commands += `        - "${ipv6WithPrefix}"\n`;
   }
   
   if (config.gateway) {

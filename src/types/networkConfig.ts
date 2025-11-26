@@ -28,6 +28,10 @@ export interface NetworkConfig {
   bondName: string;
   bondMode: BondMode;
   bondSlaves: string;
+  
+  // DNS options
+  useGoogleDNSv4: boolean;
+  useGoogleDNSv6: boolean;
 }
 
 export interface ParsedConfig {

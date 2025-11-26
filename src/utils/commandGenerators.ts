@@ -136,10 +136,10 @@ const generateUbuntu1804Hetzner = (config: NetworkConfig): string => {
   }
   
   if (config.enableBonding) {
-    commands += `      interfaces: [${config.bondName}]\n`;
+    commands += `      interfaces: [ ${config.bondName} ]\n`;
   } else {
     const interfaces = config.interfaces.split(',').map(s => s.trim()).filter(s => s);
-    commands += `      interfaces: [${interfaces.join(', ')}]\n`;
+    commands += `      interfaces: [ ${interfaces.join(', ')} ]\n`;
   }
   
   if (config.gateway) {
@@ -219,10 +219,10 @@ const generateUbuntu1804Other = (config: NetworkConfig): string => {
   }
   
   if (config.enableBonding) {
-    commands += `      interfaces: [${config.bondName}]\n`;
+    commands += `      interfaces: [ ${config.bondName} ]\n`;
   } else {
     const interfaces = config.interfaces.split(',').map(s => s.trim()).filter(s => s);
-    commands += `      interfaces: [${interfaces.join(', ')}]\n`;
+    commands += `      interfaces: [ ${interfaces.join(', ')} ]\n`;
   }
   
   if (config.gateway) {

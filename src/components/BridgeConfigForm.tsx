@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Copy, Download, Terminal, Check, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { NetworkConfig, OS_OPTIONS, NETMASK_OPTIONS, ParsedConfig } from "@/types/networkConfig";
@@ -20,7 +21,7 @@ export const BridgeConfigForm = () => {
     bridgeName: "viifbr0",
     interfaces: "",
     gateway: "",
-    dns: "8.8.8.8,8.8.4.4",
+    dns: "8.8.8.8, 8.8.4.4, 2001:4860:4860::8888, 2001:4860:4860::8844",
     os: "ubuntu-18.04-hetzner",
     macAddress: "",
     enableIPv6: false,
@@ -31,6 +32,8 @@ export const BridgeConfigForm = () => {
     bondName: "bond0",
     bondMode: "mode-1",
     bondSlaves: "",
+    useGoogleDNSv4: true,
+    useGoogleDNSv6: true,
   });
 
   const [copied, setCopied] = useState(false);
@@ -431,12 +434,59 @@ export const BridgeConfigForm = () => {
               </Label>
               <Input
                 id="dns"
-                placeholder="8.8.8.8, 8.8.4.4"
+                placeholder="8.8.8.8, 8.8.4.4, 2001:4860:4860::8888, 2001:4860:4860::8844"
                 value={config.dns}
                 onChange={(e) => setConfig({ ...config, dns: e.target.value })}
                 className="mt-1.5 bg-background border-input"
               />
               <p className="text-xs text-muted-foreground mt-1">Comma-separated DNS servers (optional)</p>
+              
+              {/* DNS Checkboxes */}
+              <div className="flex flex-col gap-3 mt-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="useGoogleDNSv4" 
+                    checked={config.useGoogleDNSv4}
+                    onCheckedChange={(checked) => {
+                      setConfig({ ...config, useGoogleDNSv4: checked as boolean });
+                      if (checked) {
+                        const dnsArray = config.dns.split(',').map(s => s.trim()).filter(s => s);
+                        if (!dnsArray.includes('8.8.8.8')) dnsArray.push('8.8.8.8');
+                        if (!dnsArray.includes('8.8.4.4')) dnsArray.push('8.8.4.4');
+                        setConfig({ ...config, dns: dnsArray.join(', '), useGoogleDNSv4: checked as boolean });
+                      }
+                    }}
+                  />
+                  <Label 
+                    htmlFor="useGoogleDNSv4" 
+                    className="text-sm font-normal cursor-pointer text-foreground"
+                  >
+                    Use Google Public DNS (IPv4)
+                  </Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="useGoogleDNSv6" 
+                    checked={config.useGoogleDNSv6}
+                    onCheckedChange={(checked) => {
+                      setConfig({ ...config, useGoogleDNSv6: checked as boolean });
+                      if (checked) {
+                        const dnsArray = config.dns.split(',').map(s => s.trim()).filter(s => s);
+                        if (!dnsArray.includes('2001:4860:4860::8888')) dnsArray.push('2001:4860:4860::8888');
+                        if (!dnsArray.includes('2001:4860:4860::8844')) dnsArray.push('2001:4860:4860::8844');
+                        setConfig({ ...config, dns: dnsArray.join(', '), useGoogleDNSv6: checked as boolean });
+                      }
+                    }}
+                  />
+                  <Label 
+                    htmlFor="useGoogleDNSv6" 
+                    className="text-sm font-normal cursor-pointer text-foreground"
+                  >
+                    Use Google Public DNS (IPv6)
+                  </Label>
+                </div>
+              </div>
             </div>
           </div>
         </Card>

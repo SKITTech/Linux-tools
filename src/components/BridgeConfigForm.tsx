@@ -11,7 +11,7 @@ import { Copy, Download, Terminal, Check, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { NetworkConfig, OS_OPTIONS, NETMASK_OPTIONS, ParsedConfig } from "@/types/networkConfig";
 import { generateCommands } from "@/utils/commandGenerators";
-import { validateIPAddress, validateNetmask, cidrToNetmask } from "@/utils/configParser";
+import { validateIPAddress, validateNetmask, cidrToNetmask, validateIPv6Address, validateMACAddress, validateInterfaceName, validateIPv6Prefix, validateDNSServers } from "@/utils/configParser";
 import { NetworkConfigParser } from "./NetworkConfigParser";
 
 export const BridgeConfigForm = () => {
@@ -42,26 +42,95 @@ export const BridgeConfigForm = () => {
   const validateForm = () => {
     const errors: Record<string, string> = {};
 
-    if (config.ipAddress && !validateIPAddress(config.ipAddress)) {
+    // IP Address validation
+    if (!config.ipAddress.trim()) {
+      errors.ipAddress = "IP address is required";
+    } else if (!validateIPAddress(config.ipAddress)) {
       errors.ipAddress = "Invalid IP address format";
     }
 
-    if (config.netmask && !validateNetmask(config.netmask)) {
+    // Netmask validation
+    if (!config.netmask.trim()) {
+      errors.netmask = "Netmask is required";
+    } else if (!validateNetmask(config.netmask)) {
       errors.netmask = "Invalid netmask format";
     }
 
+    // Bridge name validation
+    if (!config.bridgeName.trim()) {
+      errors.bridgeName = "Bridge name is required";
+    } else if (!validateInterfaceName(config.bridgeName)) {
+      errors.bridgeName = "Invalid bridge name (max 15 chars, alphanumeric, -, _)";
+    }
+
+    // MAC Address validation (optional but must be valid if provided)
+    if (config.macAddress && !validateMACAddress(config.macAddress)) {
+      errors.macAddress = "Invalid MAC address format (e.g., 00:16:3e:7f:ae:93)";
+    }
+
+    // Gateway validation
     if (!config.gateway.trim()) {
       errors.gateway = "Gateway is required";
     } else if (!validateIPAddress(config.gateway)) {
       errors.gateway = "Invalid gateway IP address";
     }
 
-    if (!config.enableBonding && !config.interfaces.trim()) {
-      errors.interfaces = "At least one interface is required";
+    // DNS validation
+    if (config.dns && !validateDNSServers(config.dns)) {
+      errors.dns = "Invalid DNS server addresses";
     }
 
-    if (config.enableBonding && !config.bondSlaves.trim()) {
-      errors.bondSlaves = "At least two slave interfaces are required for bonding";
+    // IPv6 validation when enabled
+    if (config.enableIPv6) {
+      if (!config.ipv6Address.trim()) {
+        errors.ipv6Address = "IPv6 address is required when IPv6 is enabled";
+      } else if (!validateIPv6Address(config.ipv6Address)) {
+        errors.ipv6Address = "Invalid IPv6 address format";
+      }
+
+      if (!config.ipv6Prefix.trim()) {
+        errors.ipv6Prefix = "IPv6 prefix is required when IPv6 is enabled";
+      } else if (!validateIPv6Prefix(config.ipv6Prefix)) {
+        errors.ipv6Prefix = "Invalid IPv6 prefix (must be 1-128)";
+      }
+
+      if (!config.ipv6Gateway.trim()) {
+        errors.ipv6Gateway = "IPv6 gateway is required when IPv6 is enabled";
+      } else if (!validateIPv6Address(config.ipv6Gateway)) {
+        errors.ipv6Gateway = "Invalid IPv6 gateway address";
+      }
+    }
+
+    // Bonding validation
+    if (config.enableBonding) {
+      if (!config.bondName.trim()) {
+        errors.bondName = "Bond name is required when bonding is enabled";
+      } else if (!validateInterfaceName(config.bondName)) {
+        errors.bondName = "Invalid bond name (max 15 chars, alphanumeric, -, _)";
+      }
+
+      if (!config.bondSlaves.trim()) {
+        errors.bondSlaves = "At least two slave interfaces are required for bonding";
+      } else {
+        const slaves = config.bondSlaves.split(',').map(s => s.trim()).filter(s => s);
+        if (slaves.length < 2) {
+          errors.bondSlaves = "At least two slave interfaces are required";
+        } else if (!slaves.every(validateInterfaceName)) {
+          errors.bondSlaves = "Invalid interface names in bond slaves";
+        }
+      }
+    } else {
+      // Interface validation when not bonding
+      if (!config.interfaces.trim()) {
+        errors.interfaces = "At least one interface is required";
+      } else {
+        const ifaces = config.interfaces.split(',').map(s => s.trim()).filter(s => s);
+        if (ifaces.length === 0) {
+          errors.interfaces = "At least one interface is required";
+        } else if (!ifaces.every(validateInterfaceName)) {
+          errors.interfaces = "Invalid interface names";
+        }
+      }
     }
 
     setValidationErrors(errors);
@@ -209,11 +278,20 @@ export const BridgeConfigForm = () => {
               </Label>
               <Input
                 id="bridgeName"
-                placeholder="br0"
+                placeholder="viifbr0"
                 value={config.bridgeName}
-                onChange={(e) => setConfig({ ...config, bridgeName: e.target.value })}
-                className="mt-1.5 bg-background border-input"
+                onChange={(e) => {
+                  setConfig({ ...config, bridgeName: e.target.value });
+                  validateForm();
+                }}
+                className={`mt-1.5 bg-background border-input ${validationErrors.bridgeName ? 'border-destructive' : ''}`}
               />
+              {validationErrors.bridgeName && (
+                <div className="flex items-center gap-1 mt-1 text-destructive text-xs">
+                  <AlertCircle className="w-3 h-3" />
+                  {validationErrors.bridgeName}
+                </div>
+              )}
               <p className="text-xs text-muted-foreground mt-1">Name for the bridge interface</p>
             </div>
 
@@ -226,9 +304,18 @@ export const BridgeConfigForm = () => {
                 id="macAddress"
                 placeholder="00:16:3e:7f:ae:93"
                 value={config.macAddress}
-                onChange={(e) => setConfig({ ...config, macAddress: e.target.value })}
-                className="mt-1.5 bg-background border-input"
+                onChange={(e) => {
+                  setConfig({ ...config, macAddress: e.target.value });
+                  validateForm();
+                }}
+                className={`mt-1.5 bg-background border-input ${validationErrors.macAddress ? 'border-destructive' : ''}`}
               />
+              {validationErrors.macAddress && (
+                <div className="flex items-center gap-1 mt-1 text-destructive text-xs">
+                  <AlertCircle className="w-3 h-3" />
+                  {validationErrors.macAddress}
+                </div>
+              )}
               <p className="text-xs text-muted-foreground mt-1">Optional MAC address for the bridge</p>
             </div>
 
@@ -268,9 +355,18 @@ export const BridgeConfigForm = () => {
                     id="ipv6Address"
                     placeholder="2001:db8::1"
                     value={config.ipv6Address}
-                    onChange={(e) => setConfig({ ...config, ipv6Address: e.target.value })}
-                    className="mt-1.5 bg-background border-input"
+                    onChange={(e) => {
+                      setConfig({ ...config, ipv6Address: e.target.value });
+                      validateForm();
+                    }}
+                    className={`mt-1.5 bg-background border-input ${validationErrors.ipv6Address ? 'border-destructive' : ''}`}
                   />
+                  {validationErrors.ipv6Address && (
+                    <div className="flex items-center gap-1 mt-1 text-destructive text-xs">
+                      <AlertCircle className="w-3 h-3" />
+                      {validationErrors.ipv6Address}
+                    </div>
+                  )}
                   <p className="text-xs text-muted-foreground mt-1">IPv6 address for the bridge</p>
                 </div>
 
@@ -282,9 +378,18 @@ export const BridgeConfigForm = () => {
                     id="ipv6Prefix"
                     placeholder="64"
                     value={config.ipv6Prefix}
-                    onChange={(e) => setConfig({ ...config, ipv6Prefix: e.target.value })}
-                    className="mt-1.5 bg-background border-input"
+                    onChange={(e) => {
+                      setConfig({ ...config, ipv6Prefix: e.target.value });
+                      validateForm();
+                    }}
+                    className={`mt-1.5 bg-background border-input ${validationErrors.ipv6Prefix ? 'border-destructive' : ''}`}
                   />
+                  {validationErrors.ipv6Prefix && (
+                    <div className="flex items-center gap-1 mt-1 text-destructive text-xs">
+                      <AlertCircle className="w-3 h-3" />
+                      {validationErrors.ipv6Prefix}
+                    </div>
+                  )}
                   <p className="text-xs text-muted-foreground mt-1">Typically 64 for most networks</p>
                 </div>
 
@@ -296,9 +401,18 @@ export const BridgeConfigForm = () => {
                     id="ipv6Gateway"
                     placeholder="2001:db8::1"
                     value={config.ipv6Gateway}
-                    onChange={(e) => setConfig({ ...config, ipv6Gateway: e.target.value })}
-                    className="mt-1.5 bg-background border-input"
+                    onChange={(e) => {
+                      setConfig({ ...config, ipv6Gateway: e.target.value });
+                      validateForm();
+                    }}
+                    className={`mt-1.5 bg-background border-input ${validationErrors.ipv6Gateway ? 'border-destructive' : ''}`}
                   />
+                  {validationErrors.ipv6Gateway && (
+                    <div className="flex items-center gap-1 mt-1 text-destructive text-xs">
+                      <AlertCircle className="w-3 h-3" />
+                      {validationErrors.ipv6Gateway}
+                    </div>
+                  )}
                   <p className="text-xs text-muted-foreground mt-1">Default IPv6 gateway</p>
                 </div>
               </>
@@ -332,9 +446,18 @@ export const BridgeConfigForm = () => {
                     id="bondName"
                     placeholder="bond0"
                     value={config.bondName}
-                    onChange={(e) => setConfig({ ...config, bondName: e.target.value })}
-                    className="mt-1.5 bg-background border-input"
+                    onChange={(e) => {
+                      setConfig({ ...config, bondName: e.target.value });
+                      validateForm();
+                    }}
+                    className={`mt-1.5 bg-background border-input ${validationErrors.bondName ? 'border-destructive' : ''}`}
                   />
+                  {validationErrors.bondName && (
+                    <div className="flex items-center gap-1 mt-1 text-destructive text-xs">
+                      <AlertCircle className="w-3 h-3" />
+                      {validationErrors.bondName}
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -436,9 +559,18 @@ export const BridgeConfigForm = () => {
                 id="dns"
                 placeholder="8.8.8.8, 8.8.4.4, 2001:4860:4860::8888, 2001:4860:4860::8844"
                 value={config.dns}
-                onChange={(e) => setConfig({ ...config, dns: e.target.value })}
-                className="mt-1.5 bg-background border-input"
+                onChange={(e) => {
+                  setConfig({ ...config, dns: e.target.value });
+                  validateForm();
+                }}
+                className={`mt-1.5 bg-background border-input ${validationErrors.dns ? 'border-destructive' : ''}`}
               />
+              {validationErrors.dns && (
+                <div className="flex items-center gap-1 mt-1 text-destructive text-xs">
+                  <AlertCircle className="w-3 h-3" />
+                  {validationErrors.dns}
+                </div>
+              )}
               <p className="text-xs text-muted-foreground mt-1">Comma-separated DNS servers (optional)</p>
               
               {/* DNS Checkboxes */}

@@ -79,3 +79,45 @@ export const cidrToNetmask = (cidr: number): string => {
     mask & 0xff
   ].join('.');
 };
+
+export const validateIPv6Address = (ip: string): boolean => {
+  // Remove CIDR prefix if present
+  const ipWithoutPrefix = ip.includes('/') ? ip.split('/')[0] : ip;
+  
+  // IPv6 regex pattern
+  const ipv6Regex = /^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$/;
+  
+  return ipv6Regex.test(ipWithoutPrefix);
+};
+
+export const validateMACAddress = (mac: string): boolean => {
+  if (!mac.trim()) return true; // Empty is valid (optional field)
+  
+  // MAC address patterns: xx:xx:xx:xx:xx:xx or xx-xx-xx-xx-xx-xx
+  const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
+  return macRegex.test(mac);
+};
+
+export const validateInterfaceName = (name: string): boolean => {
+  if (!name.trim()) return false;
+  
+  // Valid Linux interface names: alphanumeric, hyphens, underscores, max 15 chars
+  const ifaceRegex = /^[a-zA-Z0-9_-]{1,15}$/;
+  return ifaceRegex.test(name.trim());
+};
+
+export const validateIPv6Prefix = (prefix: string): boolean => {
+  const num = parseInt(prefix);
+  return !isNaN(num) && num >= 1 && num <= 128;
+};
+
+export const validateDNSServers = (dns: string): boolean => {
+  if (!dns.trim()) return true; // Empty is valid (optional)
+  
+  const servers = dns.split(',').map(s => s.trim()).filter(s => s);
+  
+  return servers.every(server => {
+    // Check if it's IPv4 or IPv6
+    return validateIPAddress(server) || validateIPv6Address(server);
+  });
+};

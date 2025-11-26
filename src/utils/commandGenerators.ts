@@ -111,7 +111,8 @@ const generateUbuntu1804Hetzner = (config: NetworkConfig): string => {
     }
     commands += `  bridges:\n`;
     commands += `    ${config.bridgeName}:\n`;
-    commands += `      interfaces: [${config.bondName}]\n`;
+    commands += `      addresses:\n`;
+    commands += `        - ${config.ipAddress}/${cidr}\n`;
   } else {
     const interfaces = config.interfaces.split(',').map(s => s.trim()).filter(s => s);
     commands += `network:\n`;
@@ -124,16 +125,21 @@ const generateUbuntu1804Hetzner = (config: NetworkConfig): string => {
     });
     commands += `  bridges:\n`;
     commands += `    ${config.bridgeName}:\n`;
-    commands += `      interfaces: [${interfaces.join(', ')}]\n`;
+    commands += `      addresses:\n`;
+    commands += `        - ${config.ipAddress}/${cidr}\n`;
   }
-  
-  commands += `      addresses:\n`;
-  commands += `        - ${config.ipAddress}/${cidr}\n`;
   if (config.enableIPv6 && config.ipv6Address) {
     const ipv6WithPrefix = config.ipv6Address.includes('/') 
       ? config.ipv6Address 
       : `${config.ipv6Address}/${config.ipv6Prefix}`;
     commands += `        - "${ipv6WithPrefix}"\n`;
+  }
+  
+  if (config.enableBonding) {
+    commands += `      interfaces: [${config.bondName}]\n`;
+  } else {
+    const interfaces = config.interfaces.split(',').map(s => s.trim()).filter(s => s);
+    commands += `      interfaces: [${interfaces.join(', ')}]\n`;
   }
   
   if (config.gateway) {
@@ -188,7 +194,8 @@ const generateUbuntu1804Other = (config: NetworkConfig): string => {
     }
     commands += `  bridges:\n`;
     commands += `    ${config.bridgeName}:\n`;
-    commands += `      interfaces: [${config.bondName}]\n`;
+    commands += `      addresses:\n`;
+    commands += `        - ${config.ipAddress}/${cidr}\n`;
   } else {
     const interfaces = config.interfaces.split(',').map(s => s.trim()).filter(s => s);
     commands += `network:\n`;
@@ -201,16 +208,21 @@ const generateUbuntu1804Other = (config: NetworkConfig): string => {
     });
     commands += `  bridges:\n`;
     commands += `    ${config.bridgeName}:\n`;
-    commands += `      interfaces: [${interfaces.join(', ')}]\n`;
+    commands += `      addresses:\n`;
+    commands += `        - ${config.ipAddress}/${cidr}\n`;
   }
-  
-  commands += `      addresses:\n`;
-  commands += `        - ${config.ipAddress}/${cidr}\n`;
   if (config.enableIPv6 && config.ipv6Address) {
     const ipv6WithPrefix = config.ipv6Address.includes('/') 
       ? config.ipv6Address 
       : `${config.ipv6Address}/${config.ipv6Prefix}`;
     commands += `        - "${ipv6WithPrefix}"\n`;
+  }
+  
+  if (config.enableBonding) {
+    commands += `      interfaces: [${config.bondName}]\n`;
+  } else {
+    const interfaces = config.interfaces.split(',').map(s => s.trim()).filter(s => s);
+    commands += `      interfaces: [${interfaces.join(', ')}]\n`;
   }
   
   if (config.gateway) {

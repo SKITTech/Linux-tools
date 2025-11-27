@@ -1,0 +1,4 @@
+project_id = "cdzpjecauzedmcwojtpo"
+
+[functions.check-port]
+verify_jwt = false

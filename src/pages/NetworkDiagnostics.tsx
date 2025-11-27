@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Activity, Network, Wifi, Globe, AlertCircle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { ToolNav } from "@/components/ToolNav";
+import { supabase } from "@/integrations/supabase/client";
 
 const NetworkDiagnostics = () => {
   const [pingHost, setPingHost] = useState("");
@@ -67,34 +68,53 @@ const NetworkDiagnostics = () => {
     setLoading(true);
     setPortResult(`Checking ${portHost}:${port}...\n`);
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const { data, error } = await supabase.functions.invoke('check-port', {
+        body: {
+          host: portHost.trim(),
+          port: port,
+          timeout: 5000
+        }
+      });
 
-    // Simulate common ports being open
-    const commonPorts = [22, 80, 443, 3306, 5432, 8080, 8443];
-    const isOpen = commonPorts.includes(port) || Math.random() > 0.5;
+      if (error) {
+        throw error;
+      }
 
-    let output = `Port Scan Results for ${portHost}:${port}\n\n`;
-    output += `Status: ${isOpen ? "OPEN ✓" : "CLOSED/FILTERED ✗"}\n`;
-    
-    if (isOpen) {
-      const services: { [key: number]: string } = {
-        22: "SSH",
-        80: "HTTP",
-        443: "HTTPS",
-        3306: "MySQL",
-        5432: "PostgreSQL",
-        8080: "HTTP-Alt",
-        8443: "HTTPS-Alt",
-      };
-      const service = services[port] || "Unknown";
-      output += `Service: ${service}\n`;
+      let output = `Port Scan Results for ${data.host}:${data.port}\n\n`;
+      
+      if (data.status === 'open') {
+        output += `Status: OPEN ✓\n`;
+        output += `Service: ${data.service}\n`;
+        output += `Response Time: ${data.responseTime}ms\n`;
+        if (data.ipVersion) {
+          output += `IP Version: ${data.ipVersion}\n`;
+        }
+        toast.success("Port is open and reachable");
+      } else if (data.status === 'closed') {
+        output += `Status: CLOSED/FILTERED ✗\n`;
+        output += `Response Time: ${data.responseTime}ms\n`;
+        output += `Error: ${data.error}\n`;
+        toast.error("Port is closed or filtered");
+      } else if (data.status === 'timeout') {
+        output += `Status: TIMEOUT ⏱\n`;
+        output += `Response Time: ${data.responseTime}ms\n`;
+        output += `Error: ${data.error}\n`;
+        toast.error("Connection timeout");
+      } else {
+        output += `Status: ERROR ✗\n`;
+        output += `Error: ${data.error}\n`;
+        toast.error("Error checking port");
+      }
+
+      setPortResult(output);
+    } catch (error) {
+      console.error('Port check error:', error);
+      setPortResult(`Error checking port: ${error.message}\n`);
+      toast.error("Failed to check port");
+    } finally {
+      setLoading(false);
     }
-
-    output += `Response Time: ${(Math.random() * 100 + 50).toFixed(0)}ms\n`;
-
-    setPortResult(output);
-    setLoading(false);
-    toast.success("Port check completed");
   };
 
   const lookupDNS = async () => {
@@ -257,9 +277,9 @@ const NetworkDiagnostics = () => {
                 )}
 
                 <Alert>
-                  <AlertCircle className="h-4 w-4" />
+                  <CheckCircle2 className="h-4 w-4" />
                   <AlertDescription>
-                    This is a simulated port check. Real port scanning requires backend infrastructure.
+                    Real-time port checking with backend support. Supports both IPv4 and IPv6 addresses.
                   </AlertDescription>
                 </Alert>
               </TabsContent>

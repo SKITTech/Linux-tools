@@ -190,16 +190,6 @@ const SecurityAudit = () => {
     }
   };
 
-  const navItems = [
-    { to: "/", icon: Activity, label: "Bridge Generator" },
-    { to: "/subnet-calculator", icon: Network, label: "Subnet Calculator" },
-    { to: "/network-diagnostics", icon: Wifi, label: "Network Diagnostics" },
-    { to: "/ipv6-converter", icon: Globe, label: "IPv6 Converter" },
-    { to: "/firewall-generator", icon: Shield, label: "Firewall Generator" },
-    { to: "/log-analyzer", icon: FileText, label: "Log Analyzer" },
-    { to: "/security-audit", icon: ShieldAlert, label: "Security Audit" },
-  ];
-
   const groupedItems = auditItems.reduce((acc, item) => {
     if (!acc[item.category]) acc[item.category] = [];
     acc[item.category].push(item);
@@ -207,191 +197,190 @@ const SecurityAudit = () => {
   }, {} as Record<string, AuditItem[]>);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container mx-auto px-4 py-8">
-        <ToolNav items={navItems} />
-
-        <div className="text-center my-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <ShieldAlert className="w-10 h-10 text-primary" />
-            <h1 className="text-4xl font-bold text-foreground">Security Audit Checklist</h1>
+    <Sidebar>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center my-8">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <ShieldAlert className="w-10 h-10 text-primary" />
+              <h1 className="text-4xl font-bold text-foreground">Security Audit Checklist</h1>
+            </div>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Comprehensive security checklist for Linux system administrators
+            </p>
           </div>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Comprehensive security checklist for Linux system administrators
-          </p>
-        </div>
 
-        <div className="grid lg:grid-cols-3 gap-6 mb-8">
-          <Card className="border-border/40 shadow-lg">
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="text-4xl font-bold text-primary mb-2">{completionPercentage}%</div>
-                <div className="text-sm text-muted-foreground">Completion</div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  {checkedCount} of {totalCount} items
+          <div className="grid lg:grid-cols-3 gap-6 mb-8">
+            <Card className="border-border/40 shadow-lg">
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-primary mb-2">{completionPercentage}%</div>
+                  <div className="text-sm text-muted-foreground">Completion</div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {checkedCount} of {totalCount} items
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border/40 shadow-lg border-destructive/20">
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-destructive mb-2">{criticalUnchecked}</div>
+                  <div className="text-sm text-muted-foreground">Critical Issues</div>
+                  <div className="text-xs text-muted-foreground mt-1">Require immediate attention</div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border/40 shadow-lg border-orange-500/20">
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-orange-500 mb-2">{highUnchecked}</div>
+                  <div className="text-sm text-muted-foreground">High Priority</div>
+                  <div className="text-xs text-muted-foreground mt-1">Should be addressed soon</div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="border-border/40 shadow-lg mb-6">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Audit Checklist</CardTitle>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={selectAll}>
+                    Select All
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={clearAll}>
+                    Clear All
+                  </Button>
+                  <Button size="sm" onClick={generateReport}>
+                    Generate Report
+                  </Button>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/40 shadow-lg border-destructive/20">
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="text-4xl font-bold text-destructive mb-2">{criticalUnchecked}</div>
-                <div className="text-sm text-muted-foreground">Critical Issues</div>
-                <div className="text-xs text-muted-foreground mt-1">Require immediate attention</div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/40 shadow-lg border-orange-500/20">
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="text-4xl font-bold text-orange-500 mb-2">{highUnchecked}</div>
-                <div className="text-sm text-muted-foreground">High Priority</div>
-                <div className="text-xs text-muted-foreground mt-1">Should be addressed soon</div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card className="border-border/40 shadow-lg mb-6">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Audit Checklist</CardTitle>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={selectAll}>
-                  Select All
-                </Button>
-                <Button variant="outline" size="sm" onClick={clearAll}>
-                  Clear All
-                </Button>
-                <Button size="sm" onClick={generateReport}>
-                  Generate Report
-                </Button>
-              </div>
-            </div>
-            <CardDescription>Check items as you verify each security measure</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {Object.entries(groupedItems).map(([category, items]) => (
-                <div key={category}>
-                  <h3 className="font-semibold text-lg mb-3 text-foreground">{category}</h3>
-                  <div className="space-y-3">
-                    {items.map((item) => (
-                      <div
-                        key={item.id}
-                        className={`border rounded-lg p-4 transition-colors ${
-                          item.checked ? "bg-muted/30 border-primary/20" : "bg-card border-border"
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <Checkbox
-                            id={item.id}
-                            checked={item.checked}
-                            onCheckedChange={() => toggleCheck(item.id)}
-                            className="mt-1"
-                          />
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Label htmlFor={item.id} className="font-medium cursor-pointer">
-                                {item.title}
-                              </Label>
-                              <Badge className={getSeverityColor(item.severity)} variant="secondary">
-                                {item.severity.toUpperCase()}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground mb-2">{item.description}</p>
-                            <div className="bg-muted/50 p-2 rounded text-xs">
-                              <span className="font-semibold text-foreground">Remediation: </span>
-                              <span className="text-muted-foreground">{item.remediation}</span>
+              <CardDescription>Check items as you verify each security measure</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {Object.entries(groupedItems).map(([category, items]) => (
+                  <div key={category}>
+                    <h3 className="font-semibold text-lg mb-3 text-foreground">{category}</h3>
+                    <div className="space-y-3">
+                      {items.map((item) => (
+                        <div
+                          key={item.id}
+                          className={`border rounded-lg p-4 transition-colors ${
+                            item.checked ? "bg-muted/30 border-primary/20" : "bg-card border-border"
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <Checkbox
+                              id={item.id}
+                              checked={item.checked}
+                              onCheckedChange={() => toggleCheck(item.id)}
+                              className="mt-1"
+                            />
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Label htmlFor={item.id} className="font-medium cursor-pointer">
+                                  {item.title}
+                                </Label>
+                                <Badge className={getSeverityColor(item.severity)} variant="secondary">
+                                  {item.severity.toUpperCase()}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground mb-2">{item.description}</p>
+                              <div className="bg-muted/50 p-2 rounded text-xs">
+                                <span className="font-semibold text-foreground">Remediation: </span>
+                                <span className="text-muted-foreground">{item.remediation}</span>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {showReport && (
-          <Card className="border-border/40 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5" />
-                Security Audit Report
-              </CardTitle>
-              <CardDescription>Summary of your security audit</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
-                  {completionPercentage === 100 ? (
-                    <CheckCircle2 className="w-8 h-8 text-green-500" />
-                  ) : criticalUnchecked > 0 ? (
-                    <XCircle className="w-8 h-8 text-destructive" />
-                  ) : (
-                    <AlertTriangle className="w-8 h-8 text-yellow-500" />
-                  )}
-                  <div>
-                    <div className="font-semibold text-lg">
-                      {completionPercentage === 100
-                        ? "All security checks passed!"
-                        : criticalUnchecked > 0
-                        ? "Critical security issues found"
-                        : "Some security improvements needed"}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {checkedCount} of {totalCount} checks completed ({completionPercentage}%)
+                      ))}
                     </div>
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-destructive/10 p-3 rounded-lg text-center">
-                    <div className="text-2xl font-bold text-destructive">{criticalUnchecked}</div>
-                    <div className="text-xs text-muted-foreground">Critical</div>
-                  </div>
-                  <div className="bg-orange-500/10 p-3 rounded-lg text-center">
-                    <div className="text-2xl font-bold text-orange-500">{highUnchecked}</div>
-                    <div className="text-xs text-muted-foreground">High</div>
-                  </div>
-                  <div className="bg-yellow-500/10 p-3 rounded-lg text-center">
-                    <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-500">
-                      {auditItems.filter(item => item.severity === "medium" && !item.checked).length}
-                    </div>
-                    <div className="text-xs text-muted-foreground">Medium</div>
-                  </div>
-                  <div className="bg-blue-500/10 p-3 rounded-lg text-center">
-                    <div className="text-2xl font-bold text-blue-500">
-                      {auditItems.filter(item => item.severity === "low" && !item.checked).length}
-                    </div>
-                    <div className="text-xs text-muted-foreground">Low</div>
-                  </div>
-                </div>
-
-                <div className="bg-muted/30 p-4 rounded-lg">
-                  <h4 className="font-semibold mb-2">Recommendations</h4>
-                  <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                    {criticalUnchecked > 0 && (
-                      <li>Address {criticalUnchecked} critical security issues immediately</li>
-                    )}
-                    {highUnchecked > 0 && (
-                      <li>Review and fix {highUnchecked} high-priority items within 48 hours</li>
-                    )}
-                    <li>Schedule regular security audits (monthly recommended)</li>
-                    <li>Keep detailed documentation of all security measures</li>
-                    <li>Subscribe to security mailing lists for your distribution</li>
-                  </ul>
-                </div>
+                ))}
               </div>
             </CardContent>
           </Card>
-        )}
+
+          {showReport && (
+            <Card className="border-border/40 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5" />
+                  Security Audit Report
+                </CardTitle>
+                <CardDescription>Summary of your security audit</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
+                    {completionPercentage === 100 ? (
+                      <CheckCircle2 className="w-8 h-8 text-green-500" />
+                    ) : criticalUnchecked > 0 ? (
+                      <XCircle className="w-8 h-8 text-destructive" />
+                    ) : (
+                      <AlertTriangle className="w-8 h-8 text-yellow-500" />
+                    )}
+                    <div>
+                      <div className="font-semibold text-lg">
+                        {completionPercentage === 100
+                          ? "All security checks passed!"
+                          : criticalUnchecked > 0
+                          ? "Critical security issues found"
+                          : "Some security improvements needed"}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {checkedCount} of {totalCount} checks completed ({completionPercentage}%)
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-destructive/10 p-3 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-destructive">{criticalUnchecked}</div>
+                      <div className="text-xs text-muted-foreground">Critical</div>
+                    </div>
+                    <div className="bg-orange-500/10 p-3 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-orange-500">{highUnchecked}</div>
+                      <div className="text-xs text-muted-foreground">High</div>
+                    </div>
+                    <div className="bg-yellow-500/10 p-3 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-500">
+                        {auditItems.filter(item => item.severity === "medium" && !item.checked).length}
+                      </div>
+                      <div className="text-xs text-muted-foreground">Medium</div>
+                    </div>
+                    <div className="bg-blue-500/10 p-3 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-blue-500">
+                        {auditItems.filter(item => item.severity === "low" && !item.checked).length}
+                      </div>
+                      <div className="text-xs text-muted-foreground">Low</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-muted/30 p-4 rounded-lg">
+                    <h4 className="font-semibold mb-2">Recommendations</h4>
+                    <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                      {criticalUnchecked > 0 && (
+                        <li>Address {criticalUnchecked} critical security issues immediately</li>
+                      )}
+                      {highUnchecked > 0 && (
+                        <li>Review and fix {highUnchecked} high-priority items within 48 hours</li>
+                      )}
+                      <li>Schedule regular security audits (monthly recommended)</li>
+                      <li>Keep detailed documentation of all security measures</li>
+                      <li>Subscribe to security mailing lists for your distribution</li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </Sidebar>

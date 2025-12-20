@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Shield, Copy, CheckCircle2, Download, Network, Activity, Wifi, Globe } from "lucide-react";
+import { Shield, Copy, CheckCircle2, Download } from "lucide-react";
 import { toast } from "sonner";
-import { ToolNav } from "@/components/ToolNav";
+import { Sidebar } from "@/components/Sidebar";
 
 const FirewallGenerator = () => {
   const [firewallType, setFirewallType] = useState("iptables");
@@ -176,45 +176,34 @@ table inet filter {
     toast.success("Firewall rules downloaded!");
   };
 
-  const navItems = [
-    { to: "/", icon: Activity, label: "Bridge Generator" },
-    { to: "/subnet-calculator", icon: Network, label: "Subnet Calculator" },
-    { to: "/network-diagnostics", icon: Wifi, label: "Network Diagnostics" },
-    { to: "/ipv6-converter", icon: Globe, label: "IPv6 Converter" },
-    { to: "/firewall-generator", icon: Shield, label: "Firewall Generator" },
-    { to: "/log-analyzer", icon: Activity, label: "Log Analyzer" },
-    { to: "/security-audit", icon: Activity, label: "Security Audit" },
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container mx-auto px-4 py-8">
-        <ToolNav items={navItems} />
-
-        <div className="text-center my-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Shield className="w-10 h-10 text-primary" />
-            <h1 className="text-4xl font-bold text-foreground">Firewall Rule Generator</h1>
+    <Sidebar>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center my-8">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Shield className="w-10 h-10 text-primary" />
+              <h1 className="text-4xl font-bold text-foreground">Firewall Rule Generator</h1>
+            </div>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Generate iptables or nftables firewall rules with common security configurations
+            </p>
           </div>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Generate iptables or nftables firewall rules with common security configurations
-          </p>
-        </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          <Card className="border-border/40 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="w-5 h-5" />
-                Firewall Configuration
-              </CardTitle>
-              <CardDescription>Select firewall type and allowed services</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label className="text-foreground mb-2 block">
-                  Firewall Type <span className="text-destructive">*</span>
-                </Label>
+          <div className="grid lg:grid-cols-2 gap-8">
+            <Card className="border-border/40 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="w-5 h-5" />
+                  Firewall Configuration
+                </CardTitle>
+                <CardDescription>Select firewall type and allowed services</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <Label className="text-foreground mb-2 block">
+                    Firewall Type <span className="text-destructive">*</span>
+                  </Label>
                 <Select value={firewallType} onValueChange={setFirewallType}>
                   <SelectTrigger>
                     <SelectValue />
@@ -317,9 +306,10 @@ table inet filter {
               )}
             </CardContent>
           </Card>
+          </div>
         </div>
       </div>
-    </div>
+    </Sidebar>
   );
 };
 

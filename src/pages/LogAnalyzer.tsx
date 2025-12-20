@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Search, AlertTriangle, CheckCircle2, Network, Activity, Wifi, Globe, Shield } from "lucide-react";
+import { FileText, Search, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import { ToolNav } from "@/components/ToolNav";
+import { Sidebar } from "@/components/Sidebar";
 
 interface LogAnalysisResult {
   totalLines: number;
@@ -137,44 +137,33 @@ const LogAnalyzer = () => {
     toast.success("Sample log loaded!");
   };
 
-  const navItems = [
-    { to: "/", icon: Activity, label: "Bridge Generator" },
-    { to: "/subnet-calculator", icon: Network, label: "Subnet Calculator" },
-    { to: "/network-diagnostics", icon: Wifi, label: "Network Diagnostics" },
-    { to: "/ipv6-converter", icon: Globe, label: "IPv6 Converter" },
-    { to: "/firewall-generator", icon: Shield, label: "Firewall Generator" },
-    { to: "/log-analyzer", icon: FileText, label: "Log Analyzer" },
-    { to: "/security-audit", icon: Activity, label: "Security Audit" },
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container mx-auto px-4 py-8">
-        <ToolNav items={navItems} />
-
-        <div className="text-center my-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <FileText className="w-10 h-10 text-primary" />
-            <h1 className="text-4xl font-bold text-foreground">Log Analyzer</h1>
+    <Sidebar>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center my-8">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <FileText className="w-10 h-10 text-primary" />
+              <h1 className="text-4xl font-bold text-foreground">Log Analyzer</h1>
+            </div>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Parse and analyze system logs, web server logs, and application logs
+            </p>
           </div>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Parse and analyze system logs, web server logs, and application logs
-          </p>
-        </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          <div className="space-y-6">
-            <Card className="border-border/40 shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="w-5 h-5" />
-                  Log Input
-                </CardTitle>
-                <CardDescription>Paste your log content for analysis</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label className="text-foreground mb-2 block">Log Type</Label>
+          <div className="grid lg:grid-cols-2 gap-8">
+            <div className="space-y-6">
+              <Card className="border-border/40 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="w-5 h-5" />
+                    Log Input
+                  </CardTitle>
+                  <CardDescription>Paste your log content for analysis</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label className="text-foreground mb-2 block">Log Type</Label>
                   <Select value={logType} onValueChange={setLogType}>
                     <SelectTrigger>
                       <SelectValue />
@@ -333,9 +322,10 @@ const LogAnalyzer = () => {
               )}
             </CardContent>
           </Card>
+          </div>
         </div>
       </div>
-    </div>
+    </Sidebar>
   );
 };
 

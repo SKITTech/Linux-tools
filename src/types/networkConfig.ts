@@ -32,6 +32,9 @@ export interface NetworkConfig {
   // DNS options
   useGoogleDNSv4: boolean;
   useGoogleDNSv6: boolean;
+  
+  // Extra route (for AlmaLinux when gateway is of separate range)
+  extraRoute?: string;
 }
 
 export interface ParsedConfig {

@@ -3,8 +3,7 @@ import { Terminal, Search, BookOpen, ExternalLink, Copy, Check, Info } from "luc
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ToolNav } from "@/components/ToolNav";
-import { Activity, Network, Wifi, Globe, Shield, FileText, ShieldAlert } from "lucide-react";
+import { Sidebar } from "@/components/Sidebar";
 import { toast } from "sonner";
 
 interface CommandInfo {
@@ -398,39 +397,25 @@ const CommandLibrary = () => {
   const allCommands = Object.keys(commandDatabase).sort();
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-3">
-            <Terminal className="w-8 h-8 text-primary" />
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Linux Command Library</h1>
-              <p className="text-sm text-muted-foreground">
-                Summon the Magic of Linux! Type a Command and Uncover Its Secrets - search commands, syntax, and usage
-              </p>
+    <Sidebar>
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <header className="border-b border-border bg-card">
+          <div className="container mx-auto px-4 py-6">
+            <div className="flex items-center gap-3">
+              <Terminal className="w-8 h-8 text-primary" />
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">Linux Command Library</h1>
+                <p className="text-sm text-muted-foreground">
+                  Summon the Magic of Linux! Type a Command and Uncover Its Secrets
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        {/* Navigation */}
-        <div className="mb-8">
-          <ToolNav
-            items={[
-              { to: "/", icon: Activity, label: "Bridge Generator" },
-              { to: "/subnet-calculator", icon: Network, label: "Subnet Calculator" },
-              { to: "/network-diagnostics", icon: Wifi, label: "Network Diagnostics" },
-              { to: "/ipv6-converter", icon: Globe, label: "IPv6 Converter" },
-              { to: "/firewall-generator", icon: Shield, label: "Firewall Generator" },
-              { to: "/log-analyzer", icon: FileText, label: "Log Analyzer" },
-              { to: "/security-audit", icon: ShieldAlert, label: "Security Audit" },
-              { to: "/command-library", icon: Terminal, label: "Command Library" },
-            ]}
-          />
-        </div>
+        {/* Main Content */}
+        <main className="container mx-auto px-4 py-8">
 
         {/* Search Card */}
         <Card className="p-6 mb-6">
@@ -585,6 +570,7 @@ const CommandLibrary = () => {
         </Card>
       </main>
     </div>
+  </Sidebar>
   );
 };
 

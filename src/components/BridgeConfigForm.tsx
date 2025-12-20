@@ -3,16 +3,16 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Copy, Download, Terminal, Check, AlertCircle } from "lucide-react";
+import { Copy, Download, Terminal, Check, AlertCircle, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { NetworkConfig, OS_OPTIONS, NETMASK_OPTIONS, ParsedConfig } from "@/types/networkConfig";
 import { generateCommands } from "@/utils/commandGenerators";
 import { validateIPAddress, validateNetmask, cidrToNetmask, validateIPv6Address, validateMACAddress, validateInterfaceName, validateIPv6Prefix, validateDNSServers } from "@/utils/configParser";
 import { NetworkConfigParser } from "./NetworkConfigParser";
+import { CommandOutput } from "./CommandOutput";
 
 export const BridgeConfigForm = () => {
   const [config, setConfig] = useState<NetworkConfig>({
@@ -34,10 +34,12 @@ export const BridgeConfigForm = () => {
     bondSlaves: "",
     useGoogleDNSv4: true,
     useGoogleDNSv6: true,
+    extraRoute: "",
   });
 
   const [copied, setCopied] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [showExtraRoute, setShowExtraRoute] = useState(false);
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -550,6 +552,52 @@ export const BridgeConfigForm = () => {
               <p className="text-xs text-muted-foreground mt-1">Default gateway for network routing</p>
             </div>
 
+            {/* Extra Route - Only for AlmaLinux */}
+            {config.os === 'almalinux' && (
+              <div className="p-4 bg-accent/10 rounded-lg border border-accent/20">
+                {!showExtraRoute ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowExtraRoute(true)}
+                    className="w-full gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Extra Route (Gateway of separate range)
+                  </Button>
+                ) : (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label htmlFor="extraRoute" className="text-foreground font-medium">
+                        Extra Route
+                      </Label>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setShowExtraRoute(false);
+                          setConfig({ ...config, extraRoute: "" });
+                        }}
+                        className="text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                    <Input
+                      id="extraRoute"
+                      placeholder="192.168.10.10/24 192.168.1.1"
+                      value={config.extraRoute || ""}
+                      onChange={(e) => setConfig({ ...config, extraRoute: e.target.value })}
+                      className="mt-1.5 bg-background border-input"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Use when gateway is of separate range (e.g., OVH DC). Format: destination/CIDR gateway
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* DNS */}
             <div>
               <Label htmlFor="dns" className="text-foreground">
@@ -633,8 +681,10 @@ export const BridgeConfigForm = () => {
                 variant="outline"
                 onClick={handleCopy}
                 className="bg-terminal-bg hover:bg-terminal-border border-terminal-border text-terminal-text"
+                title="Copy all commands"
               >
                 {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                <span className="ml-1 text-xs">All</span>
               </Button>
               <Button
                 size="sm"
@@ -647,11 +697,9 @@ export const BridgeConfigForm = () => {
             </div>
           </div>
           
-          <Textarea
-            value={generateCommands(config)}
-            readOnly
-            className="font-mono text-sm bg-terminal-bg text-terminal-text border-terminal-border min-h-[600px] resize-none"
-          />
+          <div className="bg-terminal-bg border border-terminal-border rounded-md p-4 min-h-[600px] max-h-[800px] overflow-y-auto">
+            <CommandOutput commands={generateCommands(config)} />
+          </div>
         </Card>
       </div>
     </div>

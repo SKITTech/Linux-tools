@@ -5,9 +5,9 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Network, AlertCircle, Copy, CheckCircle2, Activity, Wifi, Globe, Shield, FileText, ShieldAlert } from "lucide-react";
+import { Network, AlertCircle, Copy, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import { ToolNav } from "@/components/ToolNav";
+import { Sidebar } from "@/components/Sidebar";
 
 interface SubnetInfo {
   networkAddress: string;
@@ -223,31 +223,19 @@ Private Address: ${result.isPrivate ? "Yes" : "No"}
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container mx-auto px-4 py-8">
-        {/* Navigation */}
-        <ToolNav
-          items={[
-            { to: "/", icon: Activity, label: "Bridge Generator" },
-            { to: "/subnet-calculator", icon: Network, label: "Subnet Calculator" },
-            { to: "/network-diagnostics", icon: Wifi, label: "Network Diagnostics" },
-            { to: "/ipv6-converter", icon: Globe, label: "IPv6 Converter" },
-            { to: "/firewall-generator", icon: Shield, label: "Firewall Generator" },
-            { to: "/log-analyzer", icon: FileText, label: "Log Analyzer" },
-            { to: "/security-audit", icon: ShieldAlert, label: "Security Audit" },
-          ]}
-        />
-
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Network className="w-10 h-10 text-primary" />
-            <h1 className="text-4xl font-bold text-foreground">Subnet Calculator</h1>
+    <Sidebar>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+        <div className="container mx-auto px-4 py-8">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Network className="w-10 h-10 text-primary" />
+              <h1 className="text-4xl font-bold text-foreground">Subnet Calculator</h1>
+            </div>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Calculate IPv4 and IPv6 subnet information including network addresses, host ranges, and CIDR notation
+            </p>
           </div>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Calculate IPv4 and IPv6 subnet information including network addresses, host ranges, and CIDR notation
-          </p>
-        </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Input Section */}
@@ -442,8 +430,9 @@ Private Address: ${result.isPrivate ? "Yes" : "No"}
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
-    </div>
+    </Sidebar>
   );
 };
 

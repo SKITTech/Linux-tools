@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { ShieldAlert, CheckCircle2, AlertTriangle, XCircle, Network, Activity, Wifi, Globe, Shield, FileText } from "lucide-react";
+import { ShieldAlert, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import { ToolNav } from "@/components/ToolNav";
+import { Sidebar } from "@/components/Sidebar";
 
 interface AuditItem {
   id: string;
@@ -392,8 +392,9 @@ const SecurityAudit = () => {
             </CardContent>
           </Card>
         )}
+        </div>
       </div>
-    </div>
+    </Sidebar>
   );
 };
 

@@ -4,9 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Globe, Copy, CheckCircle2, AlertCircle, Network, Activity, Wifi } from "lucide-react";
+import { Globe, Copy, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { ToolNav } from "@/components/ToolNav";
+import { Sidebar } from "@/components/Sidebar";
 
 const IPv6Converter = () => {
   const [ipv6Input, setIpv6Input] = useState("");
@@ -117,45 +117,34 @@ const IPv6Converter = () => {
     setTimeout(() => setCopied(""), 2000);
   };
 
-  const navItems = [
-    { to: "/", icon: Activity, label: "Bridge Generator" },
-    { to: "/subnet-calculator", icon: Network, label: "Subnet Calculator" },
-    { to: "/network-diagnostics", icon: Wifi, label: "Network Diagnostics" },
-    { to: "/ipv6-converter", icon: Globe, label: "IPv6 Converter" },
-    { to: "/firewall-generator", icon: Activity, label: "Firewall Generator" },
-    { to: "/log-analyzer", icon: Activity, label: "Log Analyzer" },
-    { to: "/security-audit", icon: Activity, label: "Security Audit" },
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container mx-auto px-4 py-8">
-        <ToolNav items={navItems} />
-
-        <div className="text-center my-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Globe className="w-10 h-10 text-primary" />
-            <h1 className="text-4xl font-bold text-foreground">IPv6 Address Converter</h1>
+    <Sidebar>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center my-8">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Globe className="w-10 h-10 text-primary" />
+              <h1 className="text-4xl font-bold text-foreground">IPv6 Address Converter</h1>
+            </div>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Expand, compress, and normalize IPv6 addresses between different formats
+            </p>
           </div>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Expand, compress, and normalize IPv6 addresses between different formats
-          </p>
-        </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          <Card className="border-border/40 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="w-5 h-5" />
-                IPv6 Input
-              </CardTitle>
-              <CardDescription>Enter an IPv6 address in any format</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label htmlFor="ipv6Input" className="text-foreground">
-                  IPv6 Address <span className="text-destructive">*</span>
-                </Label>
+          <div className="grid lg:grid-cols-2 gap-8">
+            <Card className="border-border/40 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="w-5 h-5" />
+                  IPv6 Input
+                </CardTitle>
+                <CardDescription>Enter an IPv6 address in any format</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <Label htmlFor="ipv6Input" className="text-foreground">
+                    IPv6 Address <span className="text-destructive">*</span>
+                  </Label>
                 <Input
                   id="ipv6Input"
                   placeholder="2001:db8::1 or 2001:0db8:0000:0000:0000:0000:0000:0001"
@@ -310,8 +299,9 @@ const IPv6Converter = () => {
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
-    </div>
+    </Sidebar>
   );
 };
 

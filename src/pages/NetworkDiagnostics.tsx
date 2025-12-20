@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
-import { Activity, Network, Wifi, Globe, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Wifi, AlertCircle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import { ToolNav } from "@/components/ToolNav";
+import { Sidebar } from "@/components/Sidebar";
 import { supabase } from "@/integrations/supabase/client";
 
 const NetworkDiagnostics = () => {
@@ -156,43 +156,32 @@ const NetworkDiagnostics = () => {
     toast.success("DNS lookup completed");
   };
 
-  const navItems = [
-    { to: "/", icon: Activity, label: "Bridge Generator" },
-    { to: "/subnet-calculator", icon: Network, label: "Subnet Calculator" },
-    { to: "/network-diagnostics", icon: Wifi, label: "Network Diagnostics" },
-    { to: "/ipv6-converter", icon: Globe, label: "IPv6 Converter" },
-    { to: "/firewall-generator", icon: Activity, label: "Firewall Generator" },
-    { to: "/log-analyzer", icon: Activity, label: "Log Analyzer" },
-    { to: "/security-audit", icon: Activity, label: "Security Audit" },
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container mx-auto px-4 py-8">
-        <ToolNav items={navItems} />
-
-        <div className="text-center my-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Wifi className="w-10 h-10 text-primary" />
-            <h1 className="text-4xl font-bold text-foreground">Network Diagnostics</h1>
+    <Sidebar>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center my-8">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Wifi className="w-10 h-10 text-primary" />
+              <h1 className="text-4xl font-bold text-foreground">Network Diagnostics</h1>
+            </div>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Test network connectivity, check open ports, and perform DNS lookups
+            </p>
           </div>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Test network connectivity, check open ports, and perform DNS lookups
-          </p>
-        </div>
 
-        <Card className="border-border/40 shadow-lg">
-          <CardHeader>
-            <CardTitle>Diagnostic Tools</CardTitle>
-            <CardDescription>Simulate network diagnostic commands in your browser</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="ping" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="ping">Ping Test</TabsTrigger>
-                <TabsTrigger value="port">Port Checker</TabsTrigger>
-                <TabsTrigger value="dns">DNS Lookup</TabsTrigger>
-              </TabsList>
+          <Card className="border-border/40 shadow-lg">
+            <CardHeader>
+              <CardTitle>Diagnostic Tools</CardTitle>
+              <CardDescription>Simulate network diagnostic commands in your browser</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="ping" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="ping">Ping Test</TabsTrigger>
+                  <TabsTrigger value="port">Port Checker</TabsTrigger>
+                  <TabsTrigger value="dns">DNS Lookup</TabsTrigger>
+                </TabsList>
 
               <TabsContent value="ping" className="space-y-4 mt-4">
                 <div>
@@ -340,9 +329,10 @@ const NetworkDiagnostics = () => {
               </TabsContent>
             </Tabs>
           </CardContent>
-        </Card>
+          </Card>
+        </div>
       </div>
-    </div>
+    </Sidebar>
   );
 };
 

@@ -628,13 +628,16 @@ export const BridgeConfigForm = () => {
                     id="useGoogleDNSv4" 
                     checked={config.useGoogleDNSv4}
                     onCheckedChange={(checked) => {
-                      setConfig({ ...config, useGoogleDNSv4: checked as boolean });
+                      const dnsArray = config.dns.split(',').map(s => s.trim()).filter(s => s);
                       if (checked) {
-                        const dnsArray = config.dns.split(',').map(s => s.trim()).filter(s => s);
                         if (!dnsArray.includes('8.8.8.8')) dnsArray.push('8.8.8.8');
                         if (!dnsArray.includes('8.8.4.4')) dnsArray.push('8.8.4.4');
-                        setConfig({ ...config, dns: dnsArray.join(', '), useGoogleDNSv4: checked as boolean });
+                      } else {
+                        const filtered = dnsArray.filter(d => d !== '8.8.8.8' && d !== '8.8.4.4');
+                        setConfig({ ...config, dns: filtered.join(', '), useGoogleDNSv4: false });
+                        return;
                       }
+                      setConfig({ ...config, dns: dnsArray.join(', '), useGoogleDNSv4: checked as boolean });
                     }}
                   />
                   <Label 
@@ -650,13 +653,16 @@ export const BridgeConfigForm = () => {
                     id="useGoogleDNSv6" 
                     checked={config.useGoogleDNSv6}
                     onCheckedChange={(checked) => {
-                      setConfig({ ...config, useGoogleDNSv6: checked as boolean });
+                      const dnsArray = config.dns.split(',').map(s => s.trim()).filter(s => s);
                       if (checked) {
-                        const dnsArray = config.dns.split(',').map(s => s.trim()).filter(s => s);
                         if (!dnsArray.includes('2001:4860:4860::8888')) dnsArray.push('2001:4860:4860::8888');
                         if (!dnsArray.includes('2001:4860:4860::8844')) dnsArray.push('2001:4860:4860::8844');
-                        setConfig({ ...config, dns: dnsArray.join(', '), useGoogleDNSv6: checked as boolean });
+                      } else {
+                        const filtered = dnsArray.filter(d => d !== '2001:4860:4860::8888' && d !== '2001:4860:4860::8844');
+                        setConfig({ ...config, dns: filtered.join(', '), useGoogleDNSv6: false });
+                        return;
                       }
+                      setConfig({ ...config, dns: dnsArray.join(', '), useGoogleDNSv6: checked as boolean });
                     }}
                   />
                   <Label 

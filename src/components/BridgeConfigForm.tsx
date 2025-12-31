@@ -34,6 +34,12 @@ export const BridgeConfigForm = () => {
     bondSlaves: "",
     useGoogleDNSv4: true,
     useGoogleDNSv6: true,
+    useCloudflareDNSv4: false,
+    useCloudflareDNSv6: false,
+    useOpenDNSv4: false,
+    useOpenDNSv6: false,
+    useQuad9DNSv4: false,
+    useQuad9DNSv6: false,
     extraRoute: "",
   });
 
@@ -670,6 +676,159 @@ export const BridgeConfigForm = () => {
                     className="text-sm font-normal cursor-pointer text-foreground"
                   >
                     Use Google Public DNS (IPv6)
+                  </Label>
+                </div>
+
+                {/* Cloudflare DNS */}
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="useCloudflareDNSv4" 
+                    checked={config.useCloudflareDNSv4}
+                    onCheckedChange={(checked) => {
+                      const dnsArray = config.dns.split(',').map(s => s.trim()).filter(s => s);
+                      if (checked) {
+                        if (!dnsArray.includes('1.1.1.1')) dnsArray.push('1.1.1.1');
+                        if (!dnsArray.includes('1.0.0.1')) dnsArray.push('1.0.0.1');
+                      } else {
+                        const filtered = dnsArray.filter(d => d !== '1.1.1.1' && d !== '1.0.0.1');
+                        setConfig({ ...config, dns: filtered.join(', '), useCloudflareDNSv4: false });
+                        return;
+                      }
+                      setConfig({ ...config, dns: dnsArray.join(', '), useCloudflareDNSv4: checked as boolean });
+                    }}
+                  />
+                  <Label 
+                    htmlFor="useCloudflareDNSv4" 
+                    className="text-sm font-normal cursor-pointer text-foreground"
+                  >
+                    Use Cloudflare DNS (IPv4) - 1.1.1.1
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="useCloudflareDNSv6" 
+                    checked={config.useCloudflareDNSv6}
+                    onCheckedChange={(checked) => {
+                      const dnsArray = config.dns.split(',').map(s => s.trim()).filter(s => s);
+                      if (checked) {
+                        if (!dnsArray.includes('2606:4700:4700::1111')) dnsArray.push('2606:4700:4700::1111');
+                        if (!dnsArray.includes('2606:4700:4700::1001')) dnsArray.push('2606:4700:4700::1001');
+                      } else {
+                        const filtered = dnsArray.filter(d => d !== '2606:4700:4700::1111' && d !== '2606:4700:4700::1001');
+                        setConfig({ ...config, dns: filtered.join(', '), useCloudflareDNSv6: false });
+                        return;
+                      }
+                      setConfig({ ...config, dns: dnsArray.join(', '), useCloudflareDNSv6: checked as boolean });
+                    }}
+                  />
+                  <Label 
+                    htmlFor="useCloudflareDNSv6" 
+                    className="text-sm font-normal cursor-pointer text-foreground"
+                  >
+                    Use Cloudflare DNS (IPv6)
+                  </Label>
+                </div>
+
+                {/* OpenDNS */}
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="useOpenDNSv4" 
+                    checked={config.useOpenDNSv4}
+                    onCheckedChange={(checked) => {
+                      const dnsArray = config.dns.split(',').map(s => s.trim()).filter(s => s);
+                      if (checked) {
+                        if (!dnsArray.includes('208.67.222.222')) dnsArray.push('208.67.222.222');
+                        if (!dnsArray.includes('208.67.220.220')) dnsArray.push('208.67.220.220');
+                      } else {
+                        const filtered = dnsArray.filter(d => d !== '208.67.222.222' && d !== '208.67.220.220');
+                        setConfig({ ...config, dns: filtered.join(', '), useOpenDNSv4: false });
+                        return;
+                      }
+                      setConfig({ ...config, dns: dnsArray.join(', '), useOpenDNSv4: checked as boolean });
+                    }}
+                  />
+                  <Label 
+                    htmlFor="useOpenDNSv4" 
+                    className="text-sm font-normal cursor-pointer text-foreground"
+                  >
+                    Use OpenDNS (IPv4) - 208.67.222.222
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="useOpenDNSv6" 
+                    checked={config.useOpenDNSv6}
+                    onCheckedChange={(checked) => {
+                      const dnsArray = config.dns.split(',').map(s => s.trim()).filter(s => s);
+                      if (checked) {
+                        if (!dnsArray.includes('2620:119:35::35')) dnsArray.push('2620:119:35::35');
+                        if (!dnsArray.includes('2620:119:53::53')) dnsArray.push('2620:119:53::53');
+                      } else {
+                        const filtered = dnsArray.filter(d => d !== '2620:119:35::35' && d !== '2620:119:53::53');
+                        setConfig({ ...config, dns: filtered.join(', '), useOpenDNSv6: false });
+                        return;
+                      }
+                      setConfig({ ...config, dns: dnsArray.join(', '), useOpenDNSv6: checked as boolean });
+                    }}
+                  />
+                  <Label 
+                    htmlFor="useOpenDNSv6" 
+                    className="text-sm font-normal cursor-pointer text-foreground"
+                  >
+                    Use OpenDNS (IPv6)
+                  </Label>
+                </div>
+
+                {/* Quad9 DNS */}
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="useQuad9DNSv4" 
+                    checked={config.useQuad9DNSv4}
+                    onCheckedChange={(checked) => {
+                      const dnsArray = config.dns.split(',').map(s => s.trim()).filter(s => s);
+                      if (checked) {
+                        if (!dnsArray.includes('9.9.9.9')) dnsArray.push('9.9.9.9');
+                        if (!dnsArray.includes('149.112.112.112')) dnsArray.push('149.112.112.112');
+                      } else {
+                        const filtered = dnsArray.filter(d => d !== '9.9.9.9' && d !== '149.112.112.112');
+                        setConfig({ ...config, dns: filtered.join(', '), useQuad9DNSv4: false });
+                        return;
+                      }
+                      setConfig({ ...config, dns: dnsArray.join(', '), useQuad9DNSv4: checked as boolean });
+                    }}
+                  />
+                  <Label 
+                    htmlFor="useQuad9DNSv4" 
+                    className="text-sm font-normal cursor-pointer text-foreground"
+                  >
+                    Use Quad9 DNS (IPv4) - 9.9.9.9
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="useQuad9DNSv6" 
+                    checked={config.useQuad9DNSv6}
+                    onCheckedChange={(checked) => {
+                      const dnsArray = config.dns.split(',').map(s => s.trim()).filter(s => s);
+                      if (checked) {
+                        if (!dnsArray.includes('2620:fe::fe')) dnsArray.push('2620:fe::fe');
+                        if (!dnsArray.includes('2620:fe::9')) dnsArray.push('2620:fe::9');
+                      } else {
+                        const filtered = dnsArray.filter(d => d !== '2620:fe::fe' && d !== '2620:fe::9');
+                        setConfig({ ...config, dns: filtered.join(', '), useQuad9DNSv6: false });
+                        return;
+                      }
+                      setConfig({ ...config, dns: dnsArray.join(', '), useQuad9DNSv6: checked as boolean });
+                    }}
+                  />
+                  <Label 
+                    htmlFor="useQuad9DNSv6" 
+                    className="text-sm font-normal cursor-pointer text-foreground"
+                  >
+                    Use Quad9 DNS (IPv6)
                   </Label>
                 </div>
               </div>

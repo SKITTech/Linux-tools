@@ -32,6 +32,12 @@ export interface NetworkConfig {
   // DNS options
   useGoogleDNSv4: boolean;
   useGoogleDNSv6: boolean;
+  useCloudflareDNSv4: boolean;
+  useCloudflareDNSv6: boolean;
+  useOpenDNSv4: boolean;
+  useOpenDNSv6: boolean;
+  useQuad9DNSv4: boolean;
+  useQuad9DNSv6: boolean;
   
   // Extra route (for AlmaLinux when gateway is of separate range)
   extraRoute?: string;

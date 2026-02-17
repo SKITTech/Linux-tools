@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LucideIcon, Menu, X, Activity, Network, Wifi, Globe, Shield, FileText, ShieldAlert, Terminal, GitCompare, ChevronLeft, Server } from "lucide-react";
+import { LucideIcon, Menu, Activity, Network, Wifi, Globe, Shield, FileText, ShieldAlert, Terminal, GitCompare, ChevronLeft, Server, LayoutDashboard, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface SidebarItem {
   to: string;
@@ -11,7 +12,8 @@ interface SidebarItem {
 }
 
 const navItems: SidebarItem[] = [
-  { to: "/", icon: Activity, label: "Bridge Generator" },
+  { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/bridge-generator", icon: Activity, label: "Bridge Generator" },
   { to: "/subnet-calculator", icon: Network, label: "Subnet Calculator" },
   { to: "/network-diagnostics", icon: Wifi, label: "Network Diagnostics" },
   { to: "/ipv6-converter", icon: Globe, label: "IPv6 Converter" },
@@ -29,6 +31,7 @@ interface SidebarProps {
 export const Sidebar = ({ children }: SidebarProps) => {
   const [isOpen, setIsOpen] = useState(true);
   const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <div className="flex min-h-screen w-full">
@@ -88,13 +91,22 @@ export const Sidebar = ({ children }: SidebarProps) => {
         </nav>
 
         {/* Footer */}
-        {isOpen && (
-          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border/50">
+        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-border/50 space-y-2">
+          <Button
+            variant="ghost"
+            size={isOpen ? "default" : "icon"}
+            onClick={toggleTheme}
+            className={cn("w-full hover:bg-muted/80 rounded-lg", isOpen ? "justify-start gap-2.5 px-3" : "h-9 w-9 mx-auto")}
+          >
+            {theme === "dark" ? <Sun className="w-4 h-4 shrink-0" /> : <Moon className="w-4 h-4 shrink-0" />}
+            {isOpen && <span className="text-[13px] font-medium">{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>}
+          </Button>
+          {isOpen && (
             <div className="text-[10px] text-muted-foreground/60 text-center uppercase tracking-wider">
               v2.0 · 2026
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </aside>
 
       {/* Main Content */}

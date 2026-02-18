@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LucideIcon, Menu, Activity, Network, Wifi, Globe, Shield, FileText, ShieldAlert, Terminal, GitCompare, ChevronLeft, Server, LayoutDashboard, Sun, Moon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { LucideIcon, Menu, Activity, Network, Wifi, Globe, Shield, FileText, ShieldAlert, Terminal, GitCompare, ChevronLeft, Server, LayoutDashboard, Sun, Moon, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/ThemeProvider";
 
@@ -30,8 +31,14 @@ interface SidebarProps {
 
 export const Sidebar = ({ children }: SidebarProps) => {
   const [isOpen, setIsOpen] = useState(true);
+  const [search, setSearch] = useState("");
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
+
+  const filteredItems = useMemo(
+    () => navItems.filter((item) => item.label.toLowerCase().includes(search.toLowerCase())),
+    [search]
+  );
 
   return (
     <div className="flex min-h-screen w-full">
@@ -65,9 +72,29 @@ export const Sidebar = ({ children }: SidebarProps) => {
           </Button>
         </div>
 
+        {/* Search */}
+        {isOpen && (
+          <div className="px-2 mt-2">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search tools..."
+                className="h-8 pl-8 pr-7 text-xs bg-muted/50 border-border/50 rounded-lg"
+              />
+              {search && (
+                <button onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2">
+                  <X className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Navigation */}
         <nav className="p-2 space-y-0.5 mt-2">
-          {navItems.map((item) => {
+          {filteredItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.to;
 
@@ -88,6 +115,9 @@ export const Sidebar = ({ children }: SidebarProps) => {
               </Link>
             );
           })}
+          {isOpen && search && filteredItems.length === 0 && (
+            <p className="text-xs text-muted-foreground text-center py-4">No tools found</p>
+          )}
         </nav>
 
         {/* Footer */}

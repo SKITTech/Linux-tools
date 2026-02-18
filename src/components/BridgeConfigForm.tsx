@@ -6,13 +6,41 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Copy, Download, Terminal, Check, AlertCircle, Plus } from "lucide-react";
+import { Copy, Download, Terminal, Check, AlertCircle, Plus, Lightbulb } from "lucide-react";
 import { toast } from "sonner";
 import { NetworkConfig, OS_OPTIONS, NETMASK_OPTIONS, ParsedConfig } from "@/types/networkConfig";
 import { generateCommands } from "@/utils/commandGenerators";
 import { validateIPAddress, validateNetmask, cidrToNetmask, validateIPv6Address, validateMACAddress, validateInterfaceName, validateIPv6Prefix, validateDNSServers } from "@/utils/configParser";
 import { NetworkConfigParser } from "./NetworkConfigParser";
 import { CommandOutput } from "./CommandOutput";
+
+const EXAMPLE_CONFIG: NetworkConfig = {
+  ipAddress: "192.168.1.100",
+  netmask: "255.255.255.0",
+  bridgeName: "viifbr0",
+  interfaces: "enp0s31f6",
+  gateway: "192.168.1.1",
+  dns: "8.8.8.8, 8.8.4.4",
+  os: "ubuntu-18.04-hetzner",
+  macAddress: "00:16:3e:7f:ae:93",
+  enableIPv6: true,
+  ipv6Address: "2001:db8::100",
+  ipv6Gateway: "2001:db8::1",
+  ipv6Prefix: "64",
+  enableBonding: false,
+  bondName: "bond0",
+  bondMode: "mode-1",
+  bondSlaves: "",
+  useGoogleDNSv4: true,
+  useGoogleDNSv6: true,
+  useCloudflareDNSv4: false,
+  useCloudflareDNSv6: false,
+  useOpenDNSv4: false,
+  useOpenDNSv6: false,
+  useQuad9DNSv4: false,
+  useQuad9DNSv6: false,
+  extraRoute: "",
+};
 
 export const BridgeConfigForm = () => {
   const [config, setConfig] = useState<NetworkConfig>({
@@ -209,9 +237,24 @@ export const BridgeConfigForm = () => {
       {/* Main Configuration */}
       <div className="grid lg:grid-cols-2 gap-6">
         <Card className="p-6 bg-card border-border">
-          <div className="flex items-center gap-2 mb-6">
-            <Terminal className="w-5 h-5 text-primary" />
-            <h2 className="text-xl font-semibold text-foreground">Bridge Configuration</h2>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <Terminal className="w-5 h-5 text-primary" />
+              <h2 className="text-xl font-semibold text-foreground">Bridge Configuration</h2>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setConfig(EXAMPLE_CONFIG);
+                setValidationErrors({});
+                toast.success("Example configuration loaded — edit values as needed");
+              }}
+              className="gap-1.5 text-xs"
+            >
+              <Lightbulb className="w-3.5 h-3.5" />
+              Load Example
+            </Button>
           </div>
           
           <div className="space-y-4">

@@ -102,6 +102,15 @@ const LogAnalyzer = () => {
     toast.success("Log analysis completed!");
   };
 
+  // Detect potentially dangerous regex patterns (ReDoS)
+  const isSafeRegex = (pattern: string): boolean => {
+    // Block nested quantifiers like (a+)+, (a*)+, (a+)*, etc.
+    if (/(\+|\*|\{)\s*\)\s*(\+|\*|\{)/.test(pattern)) return false;
+    // Block excessive alternation with quantifiers like (a|a)*
+    if (/\(([^)]*\|){5,}[^)]*\)[\+\*]/.test(pattern)) return false;
+    return true;
+  };
+
   const searchLogs = () => {
     if (!searchTerm.trim() || !logInput.trim()) {
       toast.error("Please enter both log content and search term");
@@ -110,6 +119,11 @@ const LogAnalyzer = () => {
 
     if (searchTerm.length > 100) {
       toast.error("Search pattern too long (max 100 characters)");
+      return;
+    }
+
+    if (!isSafeRegex(searchTerm)) {
+      toast.error("This regex pattern is not allowed due to potential performance issues");
       return;
     }
 

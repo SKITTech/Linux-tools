@@ -47,8 +47,37 @@ const serviceNames: { [key: number]: string } = {
   27017: "MongoDB",
 };
 
+// Check if an IPv4 address is private/internal
+function isPrivateIPv4(host: string): boolean {
+  const octets = host.split('.').map(Number);
+  // 10.0.0.0/8
+  if (octets[0] === 10) return true;
+  // 172.16.0.0/12
+  if (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31) return true;
+  // 192.168.0.0/16
+  if (octets[0] === 192 && octets[1] === 168) return true;
+  // 127.0.0.0/8 (loopback)
+  if (octets[0] === 127) return true;
+  // 169.254.0.0/16 (link-local)
+  if (octets[0] === 169 && octets[1] === 254) return true;
+  // 0.0.0.0
+  if (octets.every(o => o === 0)) return true;
+  return false;
+}
+
+// Check if a hostname resolves to a blocked target
+function isBlockedHostname(host: string): boolean {
+  const blocked = ['localhost', 'ip6-localhost', 'ip6-loopback'];
+  return blocked.includes(host.toLowerCase());
+}
+
 // Validate hostname/IP
 function validateHost(host: string): { valid: boolean; error?: string; isIPv6: boolean } {
+  // Block known internal hostnames
+  if (isBlockedHostname(host)) {
+    return { valid: false, error: 'Scanning internal/private addresses is not allowed', isIPv6: false };
+  }
+
   // Check if IPv6
   const ipv6Pattern = /^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|::([0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6}))$/;
   
@@ -59,14 +88,20 @@ function validateHost(host: string): { valid: boolean; error?: string; isIPv6: b
   const domainPattern = /^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)*[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/;
   
   if (ipv6Pattern.test(host)) {
+    // Block IPv6 loopback and link-local
+    if (host === '::1' || host.toLowerCase().startsWith('fe80:') || host.toLowerCase().startsWith('fc') || host.toLowerCase().startsWith('fd')) {
+      return { valid: false, error: 'Scanning internal/private addresses is not allowed', isIPv6: true };
+    }
     return { valid: true, isIPv6: true };
   }
   
   if (ipv4Pattern.test(host)) {
-    // Validate IPv4 octets
     const octets = host.split('.').map(Number);
     if (octets.some(octet => octet < 0 || octet > 255)) {
       return { valid: false, error: 'Invalid IPv4 address', isIPv6: false };
+    }
+    if (isPrivateIPv4(host)) {
+      return { valid: false, error: 'Scanning internal/private addresses is not allowed', isIPv6: false };
     }
     return { valid: true, isIPv6: false };
   }

@@ -126,7 +126,7 @@ export const Sidebar = ({ children }: SidebarProps) => {
             variant="ghost"
             size={isOpen ? "default" : "icon"}
             onClick={toggleTheme}
-            className={cn("w-full hover:bg-muted/80 rounded-lg", isOpen ? "justify-start gap-2.5 px-3" : "h-9 w-9 mx-auto")}
+            className={cn("w-full hover:bg-muted/80 rounded-lg text-foreground", isOpen ? "justify-start gap-2.5 px-3" : "h-9 w-9 mx-auto")}
           >
             {theme === "dark" ? <Sun className="w-4 h-4 shrink-0" /> : <Moon className="w-4 h-4 shrink-0" />}
             {isOpen && <span className="text-[13px] font-medium">{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>}

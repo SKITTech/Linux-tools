@@ -4,7 +4,9 @@ import {
   Activity, Network, Wifi, Globe, Shield, FileText,
   ShieldAlert, Terminal, GitCompare, ArrowRight, Sparkles,
 } from "lucide-react";
+
 import { Card } from "@/components/ui/card";
+
 
 const tools = [
   { to: "/bridge-generator", icon: Activity, label: "Bridge Generator", desc: "Generate Linux bridge configs for KVM servers", color: "from-primary/20 to-primary/5" },
@@ -16,13 +18,6 @@ const tools = [
   { to: "/security-audit", icon: ShieldAlert, label: "Security Audit", desc: "Audit server security configurations", color: "from-destructive/20 to-destructive/5" },
   { to: "/command-library", icon: Terminal, label: "Command Library", desc: "Browse common sysadmin commands", color: "from-success/20 to-success/5" },
   { to: "/database-comparator", icon: GitCompare, label: "DB Comparator", desc: "Compare database structures & generate fix SQL", color: "from-primary/20 to-primary/5" },
-];
-
-const stats = [
-  { label: "Tools Available", value: "9", icon: Sparkles },
-  { label: "OS Supported", value: "5+", icon: Terminal },
-  { label: "Config Formats", value: "Multiple", icon: FileText },
-  { label: "SQL Generators", value: "Active", icon: GitCompare },
 ];
 
 const Dashboard = () => {
@@ -45,25 +40,6 @@ const Dashboard = () => {
         </header>
 
         <main className="container mx-auto px-6 py-8 space-y-8">
-          {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {stats.map((stat) => {
-              const Icon = stat.icon;
-              return (
-                <Card key={stat.label} className="p-5 bg-card/80 backdrop-blur border-border/50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <Icon className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-foreground leading-tight">{stat.value}</p>
-                      <p className="text-xs text-muted-foreground">{stat.label}</p>
-                    </div>
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
 
           {/* Tools Grid */}
           <div>

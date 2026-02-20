@@ -356,13 +356,14 @@ const generateAlmaLinux = (config: NetworkConfig): string => {
     commands += `nmcli connection modify ${config.bridgeName} bridge.stp no\n\n`;
     
     // IPv4 configuration
-    const dnsServers = config.dns ? config.dns.split(',').map(d => d.trim()).filter(d => d).join(' ') : '8.8.8.8';
+    const allDns = config.dns ? config.dns.split(',').map(d => d.trim()).filter(d => d) : ['8.8.8.8'];
+    const ipv4Dns = allDns.filter(d => !d.includes(':')).join(' ');
     commands += `# Configure IPv4\n`;
     commands += `nmcli connection modify ${config.bridgeName} ipv4.addresses '${config.ipAddress}/${cidr}'`;
     if (config.gateway) {
       commands += ` ipv4.gateway '${config.gateway}'`;
     }
-    commands += ` ipv4.dns '${dnsServers}' ipv4.method manual\n\n`;
+    commands += ` ipv4.dns '${ipv4Dns}' ipv4.method manual\n\n`;
     
     // Extra route - only if provided
     if (config.extraRoute) {
@@ -398,13 +399,14 @@ const generateAlmaLinux = (config: NetworkConfig): string => {
     commands += `nmcli connection modify ${config.bridgeName} bridge.stp no\n\n`;
     
     // IPv4 configuration
-    const dnsServers = config.dns ? config.dns.split(',').map(d => d.trim()).filter(d => d).join(' ') : '8.8.8.8';
+    const allDns = config.dns ? config.dns.split(',').map(d => d.trim()).filter(d => d) : ['8.8.8.8'];
+    const ipv4Dns = allDns.filter(d => !d.includes(':')).join(' ');
     commands += `# Configure IPv4\n`;
     commands += `nmcli connection modify ${config.bridgeName} ipv4.addresses '${config.ipAddress}/${cidr}'`;
     if (config.gateway) {
       commands += ` ipv4.gateway '${config.gateway}'`;
     }
-    commands += ` ipv4.dns '${dnsServers}' ipv4.method manual\n\n`;
+    commands += ` ipv4.dns '${ipv4Dns}' ipv4.method manual\n\n`;
     
     // Extra route - only if provided
     if (config.extraRoute) {
@@ -440,9 +442,10 @@ const generateAlmaLinux = (config: NetworkConfig): string => {
   }
   
   // Add DNS preservation commands at the end
-  const dnsServers = config.dns ? config.dns.split(',').map(d => d.trim()).filter(d => d).join(' ') : '8.8.8.8 1.1.1.1';
+  const allDnsEnd = config.dns ? config.dns.split(',').map(d => d.trim()).filter(d => d) : ['8.8.8.8'];
+  const ipv4DnsEnd = allDnsEnd.filter(d => !d.includes(':')).join(' ') || '8.8.8.8';
   commands += `# Preserve DNS settings (run these commands to ensure DNS persists after reboot)\n`;
-  commands += `nmcli connection modify ${config.bridgeName} ipv4.dns "${dnsServers}"\n`;
+  commands += `nmcli connection modify ${config.bridgeName} ipv4.dns "${ipv4DnsEnd}"\n`;
   commands += `nmcli connection modify ${config.bridgeName} ipv4.ignore-auto-dns yes\n`;
   
   return commands;

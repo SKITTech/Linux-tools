@@ -268,7 +268,7 @@ const SecurityAudit = () => {
                   <div key={category}>
                     <h3 className="font-semibold text-lg mb-3 text-foreground">{category}</h3>
                     <div className="space-y-3">
-                      {items.map((item) => (
+                      {(items as any[]).map((item) => (
                         <div
                           key={item.id}
                           className={`border rounded-lg p-4 transition-colors ${

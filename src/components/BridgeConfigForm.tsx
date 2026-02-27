@@ -43,26 +43,31 @@ const EXAMPLE_CONFIGS: Record<string, Partial<NetworkConfig>> = {
     ipAddress: "192.168.1.100",
     interfaces: "eth0",
     gateway: "192.168.1.1",
+    bondSlaves: "eth0, eth1",
   },
   "almalinux": {
     ipAddress: "192.168.1.100",
     interfaces: "eno1",
     gateway: "192.168.1.1",
+    bondSlaves: "eno1, eno2",
   },
   "ubuntu-16.04": {
     ipAddress: "192.168.1.100",
     interfaces: "eth0",
     gateway: "192.168.1.1",
+    bondSlaves: "eth0, eth1",
   },
   "ubuntu-18.04-hetzner": {
     ipAddress: "192.168.1.100",
     interfaces: "enp0s31f6",
     gateway: "192.168.1.1",
+    bondSlaves: "enp0s31f6, enp0s31f7",
   },
   "ubuntu-18.04-other": {
     ipAddress: "10.1.3.43",
     interfaces: "ens3",
     gateway: "10.1.3.1",
+    bondSlaves: "ens3, ens4",
   },
 };
 

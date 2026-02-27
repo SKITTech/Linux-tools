@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Database, GitCompare, Copy, Check, AlertTriangle, CheckCircle, TableProperties } from "lucide-react";
+import { Database, GitCompare, Copy, Check, AlertTriangle, CheckCircle, TableProperties, FileDown } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -79,9 +79,29 @@ const DatabaseComparator = () => {
         {/* Input Areas */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Card className="p-4 space-y-2">
-            <div className="flex items-center gap-2">
-              <Database className="w-4 h-4 text-success" />
-              <h2 className="font-semibold text-foreground text-sm">Original (Correct) Structure</h2>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Database className="w-4 h-4 text-success" />
+                <h2 className="font-semibold text-foreground text-sm">Original (Correct) Structure</h2>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={async () => {
+                  try {
+                    const res = await fetch("/samples/kvm4virtualizor-sample.sql");
+                    const text = await res.text();
+                    setOriginalSQL(text);
+                    toast.success("Sample structure loaded");
+                  } catch {
+                    toast.error("Failed to load sample");
+                  }
+                }}
+              >
+                <FileDown className="w-3 h-3" />
+                Load Sample
+              </Button>
             </div>
             <Textarea
               placeholder="Paste your original/correct phpMyAdmin SQL export here...&#10;&#10;Example:&#10;CREATE TABLE `users` (&#10;  `id` int(11) NOT NULL AUTO_INCREMENT,&#10;  `name` varchar(255) NOT NULL,&#10;  PRIMARY KEY (`id`)&#10;) ENGINE=InnoDB;"

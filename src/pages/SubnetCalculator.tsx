@@ -5,9 +5,25 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Network, AlertCircle, Copy, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { Sidebar } from "@/components/Sidebar";
+import { NETMASK_OPTIONS } from "@/types/networkConfig";
+
+const IPV6_PREFIX_OPTIONS = [
+  { value: "128", label: "/128 - Single address" },
+  { value: "127", label: "/127 - Point-to-point link" },
+  { value: "126", label: "/126 - Point-to-point link" },
+  { value: "124", label: "/124 - 16 addresses" },
+  { value: "120", label: "/120 - 256 addresses" },
+  { value: "112", label: "/112 - 65,536 addresses" },
+  { value: "64", label: "/64 - Standard subnet" },
+  { value: "56", label: "/56 - Typical end-site" },
+  { value: "48", label: "/48 - Typical assignment" },
+  { value: "32", label: "/32 - ISP allocation" },
+  { value: "16", label: "/16 - Large ISP" },
+];
 
 interface SubnetInfo {
   networkAddress: string;
@@ -259,6 +275,7 @@ Private Address: ${result.isPrivate ? "Yes" : "No"}
                     variant={ipVersion === "ipv4" ? "default" : "outline"}
                     onClick={() => {
                       setIpVersion("ipv4");
+                      setCidrOrMask("");
                       setResult(null);
                       setError("");
                     }}
@@ -271,6 +288,7 @@ Private Address: ${result.isPrivate ? "Yes" : "No"}
                     variant={ipVersion === "ipv6" ? "default" : "outline"}
                     onClick={() => {
                       setIpVersion("ipv6");
+                      setCidrOrMask("");
                       setResult(null);
                       setError("");
                     }}
@@ -302,22 +320,36 @@ Private Address: ${result.isPrivate ? "Yes" : "No"}
                 </p>
               </div>
 
-              {/* CIDR/Netmask Input */}
+              {/* CIDR/Netmask / Prefix Length Dropdown */}
               <div>
                 <Label htmlFor="cidrOrMask" className="text-foreground">
-                  {ipVersion === "ipv4" ? "CIDR or Netmask" : "Prefix Length"} <span className="text-destructive">*</span>
+                  {ipVersion === "ipv4" ? "CIDR / Netmask" : "Prefix Length"} <span className="text-destructive">*</span>
                 </Label>
-                <Input
-                  id="cidrOrMask"
-                  placeholder={ipVersion === "ipv4" ? "24 or 255.255.255.0" : "64"}
+                <Select
                   value={cidrOrMask}
-                  onChange={(e) => setCidrOrMask(e.target.value)}
-                  className="mt-1"
-                />
+                  onValueChange={(value) => setCidrOrMask(value)}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder={ipVersion === "ipv4" ? "Select CIDR or Netmask" : "Select Prefix Length"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ipVersion === "ipv4"
+                      ? NETMASK_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={String(opt.cidr)}>
+                            /{opt.cidr} — {opt.value}
+                          </SelectItem>
+                        ))
+                      : IPV6_PREFIX_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                  </SelectContent>
+                </Select>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {ipVersion === "ipv4" 
-                    ? "Enter CIDR (e.g., 24) or netmask (e.g., 255.255.255.0)" 
-                    : "Enter prefix length (e.g., 64)"}
+                  {ipVersion === "ipv4"
+                    ? "Select a prefix length with its corresponding netmask"
+                    : "Select an IPv6 prefix length"}
                 </p>
               </div>
 

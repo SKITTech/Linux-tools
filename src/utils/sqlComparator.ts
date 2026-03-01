@@ -14,35 +14,70 @@ export interface ColumnDef {
 
 export interface TableDiff {
   tableName: string;
-  type: 'missing_table' | 'extra_columns' | 'missing_columns' | 'modified_columns' | 'mixed';
+  type: 'missing_table' | 'extra_table' | 'extra_columns' | 'missing_columns' | 'modified_columns' | 'mixed';
   details: string[];
   fixSQL: string;
 }
 
+/**
+ * Extract CREATE TABLE blocks by counting parentheses depth,
+ * so nested parens like int(11), decimal(10,3), PRIMARY KEY (`id`) are handled.
+ */
+function extractCreateTableBlocks(sql: string): { name: string; body: string; suffix: string; raw: string }[] {
+  const results: { name: string; body: string; suffix: string; raw: string }[] = [];
+
+  // Find each CREATE TABLE start
+  const startRegex = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?[`"]?(\w+)[`"]?\s*\(/gi;
+  let startMatch: RegExpExecArray | null;
+
+  while ((startMatch = startRegex.exec(sql)) !== null) {
+    const tableName = startMatch[1];
+    const bodyStart = startMatch.index + startMatch[0].length;
+    
+    // Walk forward counting parentheses depth
+    let depth = 1;
+    let i = bodyStart;
+    while (i < sql.length && depth > 0) {
+      if (sql[i] === '(') depth++;
+      else if (sql[i] === ')') depth--;
+      if (depth > 0) i++;
+    }
+
+    if (depth !== 0) continue; // malformed, skip
+
+    const body = sql.substring(bodyStart, i);
+    
+    // Capture suffix (ENGINE=..., DEFAULT CHARSET=..., etc.) up to semicolon
+    const afterClose = sql.substring(i + 1);
+    const suffixMatch = afterClose.match(/^([^;]*);/);
+    const suffix = suffixMatch ? suffixMatch[1].trim() : '';
+    const endPos = i + 1 + (suffixMatch ? suffixMatch[0].length : 0);
+    
+    const raw = sql.substring(startMatch.index, endPos);
+
+    results.push({ name: tableName, body, suffix, raw });
+  }
+
+  return results;
+}
+
 function parseTables(sql: string): Map<string, TableDef> {
   const tables = new Map<string, TableDef>();
-  
-  // Match CREATE TABLE blocks
-  const createRegex = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?[`"]?(\w+)[`"]?\s*\(([\s\S]*?)\)\s*(ENGINE[^;]*|[^;]*)?;/gi;
-  let match: RegExpExecArray | null;
+  const blocks = extractCreateTableBlocks(sql);
 
-  while ((match = createRegex.exec(sql)) !== null) {
-    const tableName = match[1];
-    const body = match[2];
-    const suffix = match[3] || '';
-    
+  for (const block of blocks) {
     const columns = new Map<string, ColumnDef>();
     const indexes: string[] = [];
     
-    // Split body by lines, handle commas carefully
-    const lines = body.split('\n').map(l => l.trim()).filter(l => l);
+    // Split body by lines
+    const lines = block.body.split('\n').map(l => l.trim()).filter(l => l);
     
     for (const line of lines) {
       const cleanLine = line.replace(/,\s*$/, '').trim();
       if (!cleanLine) continue;
       
       // Check if it's an index/key/constraint
-      if (/^(PRIMARY\s+KEY|UNIQUE|KEY|INDEX|CONSTRAINT|FOREIGN\s+KEY)/i.test(cleanLine)) {
+      if (/^(PRIMARY\s+KEY|UNIQUE\s+KEY|UNIQUE\s+INDEX|UNIQUE|KEY|INDEX|CONSTRAINT|FOREIGN\s+KEY)/i.test(cleanLine)) {
         indexes.push(cleanLine);
       } else {
         // It's a column definition
@@ -56,12 +91,12 @@ function parseTables(sql: string): Map<string, TableDef> {
       }
     }
     
-    tables.set(tableName.toLowerCase(), {
-      name: tableName,
+    tables.set(block.name.toLowerCase(), {
+      name: block.name,
       columns,
       indexes,
-      rawCreate: match[0],
-      engine: suffix,
+      rawCreate: block.raw,
+      engine: block.suffix,
     });
   }
   
@@ -79,7 +114,10 @@ export function compareDatabases(originalSQL: string, errorSQL: string): TableDi
       diffs.push({
         tableName: origTable.name,
         type: 'missing_table',
-        details: [`Table \`${origTable.name}\` is completely missing`],
+        details: [
+          `Table \`${origTable.name}\` is completely missing`,
+          `Columns: ${Array.from(origTable.columns.values()).map(c => c.name).join(', ')}`,
+        ],
         fixSQL: origTable.rawCreate,
       });
       continue;
@@ -92,7 +130,7 @@ export function compareDatabases(originalSQL: string, errorSQL: string): TableDi
     // Find missing columns
     for (const [colKey, origCol] of origTable.columns) {
       if (!errTable.columns.has(colKey)) {
-        details.push(`Missing column: \`${origCol.name}\``);
+        details.push(`Missing column: \`${origCol.name}\` — definition: \`${origCol.definition}\``);
         fixStatements.push(`ALTER TABLE \`${origTable.name}\` ADD COLUMN ${origCol.definition};`);
       } else {
         // Check if definition differs
@@ -100,7 +138,7 @@ export function compareDatabases(originalSQL: string, errorSQL: string): TableDi
         const normOrig = origCol.definition.replace(/\s+/g, ' ').toLowerCase();
         const normErr = errCol.definition.replace(/\s+/g, ' ').toLowerCase();
         if (normOrig !== normErr) {
-          details.push(`Modified column: \`${origCol.name}\` — expected: \`${origCol.definition}\``);
+          details.push(`Modified column: \`${origCol.name}\` — expected: \`${origCol.definition}\`, found: \`${errCol.definition}\``);
           fixStatements.push(`ALTER TABLE \`${origTable.name}\` MODIFY COLUMN ${origCol.definition};`);
         }
       }
@@ -125,13 +163,25 @@ export function compareDatabases(originalSQL: string, errorSQL: string): TableDi
     }
 
     if (details.length > 0) {
+      const missingCols = details.filter(d => d.startsWith('Missing column'));
+      const extraCols = details.filter(d => d.startsWith('Extra column'));
+      const modifiedCols = details.filter(d => d.startsWith('Modified column'));
+      const missingIdx = details.filter(d => d.startsWith('Missing index'));
+
+      let type: TableDiff['type'];
+      if (missingCols.length > 0 && extraCols.length === 0 && modifiedCols.length === 0 && missingIdx.length === 0) {
+        type = 'missing_columns';
+      } else if (extraCols.length > 0 && missingCols.length === 0 && modifiedCols.length === 0 && missingIdx.length === 0) {
+        type = 'extra_columns';
+      } else if (modifiedCols.length > 0 && missingCols.length === 0 && extraCols.length === 0 && missingIdx.length === 0) {
+        type = 'modified_columns';
+      } else {
+        type = 'mixed';
+      }
+
       diffs.push({
         tableName: origTable.name,
-        type: details.length === 1 
-          ? (details[0].startsWith('Missing column') ? 'missing_columns' 
-            : details[0].startsWith('Extra') ? 'extra_columns' 
-            : 'modified_columns')
-          : 'mixed',
+        type,
         details,
         fixSQL: fixStatements.join('\n'),
       });
@@ -143,7 +193,7 @@ export function compareDatabases(originalSQL: string, errorSQL: string): TableDi
     if (!originalTables.has(key)) {
       diffs.push({
         tableName: errTable.name,
-        type: 'extra_columns',
+        type: 'extra_table',
         details: [`Extra table \`${errTable.name}\` exists but is not in the original structure`],
         fixSQL: `DROP TABLE IF EXISTS \`${errTable.name}\`;`,
       });

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Database, GitCompare, Copy, Check, AlertTriangle, CheckCircle, TableProperties, FileDown } from "lucide-react";
+import { useState, useRef } from "react";
+import { Database, GitCompare, Copy, Check, AlertTriangle, CheckCircle, TableProperties, FileDown, Upload } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,6 +14,27 @@ const DatabaseComparator = () => {
   const [hasCompared, setHasCompared] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [copiedAll, setCopiedAll] = useState(false);
+
+  const originalFileRef = useRef<HTMLInputElement>(null);
+  const errorFileRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, target: 'original' | 'error') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.name.endsWith('.sql') && !file.name.endsWith('.txt')) {
+      toast.error("Please upload a .sql or .txt file");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string;
+      if (target === 'original') setOriginalSQL(text);
+      else setErrorSQL(text);
+      toast.success(`Loaded ${file.name}`);
+    };
+    reader.readAsText(file);
+    e.target.value = ''; // reset so same file can be re-uploaded
+  };
 
   const handleCompare = () => {
     if (!originalSQL.trim() || !errorSQL.trim()) {
@@ -52,6 +73,28 @@ const DatabaseComparator = () => {
     setHasCompared(false);
   };
 
+  const getBadgeStyle = (type: TableDiff['type']) => {
+    switch (type) {
+      case 'missing_table': return 'bg-destructive/10 text-destructive';
+      case 'extra_table': return 'bg-blue-500/10 text-blue-600';
+      case 'missing_columns': return 'bg-yellow-500/10 text-yellow-600';
+      case 'extra_columns': return 'bg-blue-500/10 text-blue-600';
+      case 'modified_columns': return 'bg-orange-500/10 text-orange-600';
+      case 'mixed': return 'bg-orange-500/10 text-orange-600';
+    }
+  };
+
+  const getBadgeLabel = (type: TableDiff['type']) => {
+    switch (type) {
+      case 'missing_table': return 'Missing Table';
+      case 'extra_table': return 'Extra Table';
+      case 'missing_columns': return 'Missing Columns';
+      case 'extra_columns': return 'Extra Columns';
+      case 'modified_columns': return 'Modified';
+      case 'mixed': return 'Multiple Issues';
+    }
+  };
+
   return (
     <Sidebar>
       <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
@@ -69,8 +112,8 @@ const DatabaseComparator = () => {
         {/* Steps Guide */}
         <Card className="p-4 bg-accent/5 border-accent/20">
           <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1.5"><span className="w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">1</span> Paste original structure</span>
-            <span className="flex items-center gap-1.5"><span className="w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">2</span> Paste error structure</span>
+            <span className="flex items-center gap-1.5"><span className="w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">1</span> Paste or upload original structure</span>
+            <span className="flex items-center gap-1.5"><span className="w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">2</span> Paste or upload error structure</span>
             <span className="flex items-center gap-1.5"><span className="w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">3</span> Click Compare</span>
             <span className="flex items-center gap-1.5"><span className="w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">4</span> Copy & execute fix SQL</span>
           </div>
@@ -78,46 +121,86 @@ const DatabaseComparator = () => {
 
         {/* Input Areas */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Original */}
           <Card className="p-4 space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Database className="w-4 h-4 text-success" />
                 <h2 className="font-semibold text-foreground text-sm">Original (Correct) Structure</h2>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1.5 text-xs"
-                onClick={async () => {
-                  try {
-                    const res = await fetch("/samples/kvm4virtualizor-sample.sql");
-                    const text = await res.text();
-                    setOriginalSQL(text);
-                    toast.success("Sample structure loaded");
-                  } catch {
-                    toast.error("Failed to load sample");
-                  }
-                }}
-              >
-                <FileDown className="w-3 h-3" />
-                Load Sample
-              </Button>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="file"
+                  ref={originalFileRef}
+                  accept=".sql,.txt"
+                  className="hidden"
+                  onChange={(e) => handleFileUpload(e, 'original')}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-xs"
+                  onClick={() => originalFileRef.current?.click()}
+                >
+                  <Upload className="w-3 h-3" />
+                  Upload .sql
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-xs"
+                  onClick={async () => {
+                    try {
+                      const res = await fetch("/samples/kvm4virtualizor-sample.sql");
+                      const text = await res.text();
+                      setOriginalSQL(text);
+                      toast.success("Sample structure loaded");
+                    } catch {
+                      toast.error("Failed to load sample");
+                    }
+                  }}
+                >
+                  <FileDown className="w-3 h-3" />
+                  Load Sample
+                </Button>
+              </div>
             </div>
             <Textarea
-              placeholder="Paste your original/correct phpMyAdmin SQL export here...&#10;&#10;Example:&#10;CREATE TABLE `users` (&#10;  `id` int(11) NOT NULL AUTO_INCREMENT,&#10;  `name` varchar(255) NOT NULL,&#10;  PRIMARY KEY (`id`)&#10;) ENGINE=InnoDB;"
+              placeholder={"Paste your original/correct phpMyAdmin SQL export here...\n\nExample:\nCREATE TABLE `users` (\n  `id` int(11) NOT NULL AUTO_INCREMENT,\n  `name` varchar(255) NOT NULL,\n  PRIMARY KEY (`id`)\n) ENGINE=InnoDB;"}
               value={originalSQL}
               onChange={(e) => setOriginalSQL(e.target.value)}
               className="min-h-[250px] font-mono text-xs bg-background border-input"
             />
           </Card>
 
+          {/* Error */}
           <Card className="p-4 space-y-2">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-destructive" />
-              <h2 className="font-semibold text-foreground text-sm">Error / Incomplete Structure</h2>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-destructive" />
+                <h2 className="font-semibold text-foreground text-sm">Error / Incomplete Structure</h2>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="file"
+                  ref={errorFileRef}
+                  accept=".sql,.txt"
+                  className="hidden"
+                  onChange={(e) => handleFileUpload(e, 'error')}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-xs"
+                  onClick={() => errorFileRef.current?.click()}
+                >
+                  <Upload className="w-3 h-3" />
+                  Upload .sql
+                </Button>
+              </div>
             </div>
             <Textarea
-              placeholder="Paste your error/incomplete phpMyAdmin SQL export here...&#10;&#10;This is the database that needs to be fixed to match the original."
+              placeholder={"Paste your error/incomplete phpMyAdmin SQL export here...\n\nThis is the database that needs to be fixed to match the original."}
               value={errorSQL}
               onChange={(e) => setErrorSQL(e.target.value)}
               className="min-h-[250px] font-mono text-xs bg-background border-input"
@@ -163,16 +246,8 @@ const DatabaseComparator = () => {
                       <div className="flex items-center gap-2">
                         <TableProperties className="w-4 h-4 text-primary" />
                         <span className="font-semibold text-foreground">{diff.tableName}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${
-                          diff.type === 'missing_table' ? 'bg-destructive/10 text-destructive' :
-                          diff.type === 'missing_columns' ? 'bg-yellow-500/10 text-yellow-600' :
-                          diff.type === 'extra_columns' ? 'bg-blue-500/10 text-blue-600' :
-                          'bg-orange-500/10 text-orange-600'
-                        }`}>
-                          {diff.type === 'missing_table' ? 'Missing Table' :
-                           diff.type === 'missing_columns' ? 'Missing Columns' :
-                           diff.type === 'extra_columns' ? 'Extra Columns' :
-                           diff.type === 'modified_columns' ? 'Modified' : 'Multiple Issues'}
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${getBadgeStyle(diff.type)}`}>
+                          {getBadgeLabel(diff.type)}
                         </span>
                       </div>
                       <Button

@@ -14,6 +14,7 @@ import LogAnalyzer from "./pages/LogAnalyzer";
 import SecurityAudit from "./pages/SecurityAudit";
 import CommandLibrary from "./pages/CommandLibrary";
 import DatabaseComparator from "./pages/DatabaseComparator";
+import ErrorSolver from "./pages/ErrorSolver";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/security-audit" element={<SecurityAudit />} />
             <Route path="/command-library" element={<CommandLibrary />} />
             <Route path="/database-comparator" element={<DatabaseComparator />} />
+            <Route path="/error-solver" element={<ErrorSolver />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

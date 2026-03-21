@@ -101,8 +101,6 @@ function getWordDiff(a: string, b: string): { aWords: { text: string; changed: b
     for (let j = 1; j <= m; j++)
       dp[i][j] = wordsA[i - 1] === wordsB[j - 1] ? dp[i - 1][j - 1] + 1 : Math.max(dp[i - 1][j], dp[i][j - 1]);
 
-  const aResult: { text: string; changed: boolean }[] = [];
-  const bResult: { text: string; changed: boolean }[] = [];
   let i = n, j = m;
   const aTemp: { text: string; changed: boolean }[] = [];
   const bTemp: { text: string; changed: boolean }[] = [];

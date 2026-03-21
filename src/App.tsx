@@ -39,6 +39,7 @@ const App = () => (
             <Route path="/command-library" element={<CommandLibrary />} />
             <Route path="/database-comparator" element={<DatabaseComparator />} />
             <Route path="/error-solver" element={<ErrorSolver />} />
+            <Route path="/text-compare" element={<TextCompare />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

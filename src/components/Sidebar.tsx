@@ -24,6 +24,7 @@ const navItems: SidebarItem[] = [
   { to: "/command-library", icon: Terminal, label: "Command Library" },
   { to: "/database-comparator", icon: GitCompare, label: "DB Comparator" },
   { to: "/error-solver", icon: AlertTriangle, label: "Error Solver" },
+  { to: "/text-compare", icon: FileSearch, label: "Text Compare" },
 ];
 
 interface SidebarProps {

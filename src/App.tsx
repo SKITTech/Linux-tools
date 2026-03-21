@@ -15,6 +15,7 @@ import SecurityAudit from "./pages/SecurityAudit";
 import CommandLibrary from "./pages/CommandLibrary";
 import DatabaseComparator from "./pages/DatabaseComparator";
 import ErrorSolver from "./pages/ErrorSolver";
+import TextCompare from "./pages/TextCompare";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

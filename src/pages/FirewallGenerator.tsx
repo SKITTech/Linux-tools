@@ -125,7 +125,6 @@ function ruleToIptables(rule: FirewallRule): string {
 }
 
 function ruleToNftables(rule: FirewallRule): string {
-  const chain = rule.direction.toLowerCase();
   let cmd = `    `;
   if (rule.source && rule.source !== "0.0.0.0/0") cmd += `ip saddr ${rule.source} `;
   if (rule.destination && rule.destination !== "0.0.0.0/0") cmd += `ip daddr ${rule.destination} `;

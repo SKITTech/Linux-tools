@@ -5,7 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import {
+  Shield, Copy, CheckCircle2, Download, Info, Terminal, Search,
+  ShieldCheck, ShieldX, Plus, Trash2, Edit2, Eye,
+  RotateCcw, AlertTriangle, Activity, Lock,
+  Server, Zap, FileText, Save, Play
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import {

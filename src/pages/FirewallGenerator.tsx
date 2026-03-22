@@ -13,14 +13,6 @@ import {
   RotateCcw, AlertTriangle, Activity, Lock,
   Server, Zap, FileText, Save, Play
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import {
-  Shield, Copy, CheckCircle2, Download, Info, Terminal, Search,
-  ShieldCheck, ShieldX, ShieldAlert, Plus, Trash2, Edit2, Eye,
-  RotateCcw, AlertTriangle, Activity, Globe, Lock, Unlock,
-  Server, Zap, FileText, ChevronRight, X, Save, Play
-} from "lucide-react";
 import { toast } from "sonner";
 import { Sidebar } from "@/components/Sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

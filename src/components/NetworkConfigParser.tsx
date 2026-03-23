@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { FileText, Upload } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { FileText, Upload, ChevronDown, Sparkles } from "lucide-react";
 import { parseNetworkConfig } from "@/utils/configParser";
 import { ParsedConfig } from "@/types/networkConfig";
 import { toast } from "sonner";
@@ -14,6 +15,7 @@ interface NetworkConfigParserProps {
 
 export const NetworkConfigParser = ({ onParsed }: NetworkConfigParserProps) => {
   const [configText, setConfigText] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleParse = () => {
     if (!configText.trim()) {
@@ -22,7 +24,7 @@ export const NetworkConfigParser = ({ onParsed }: NetworkConfigParserProps) => {
     }
 
     const parsed = parseNetworkConfig(configText);
-    
+
     if (!parsed.ipAddress && !parsed.gateway && !parsed.netmask) {
       toast.error("Could not extract network information from the config");
       return;
@@ -33,38 +35,52 @@ export const NetworkConfigParser = ({ onParsed }: NetworkConfigParserProps) => {
   };
 
   return (
-    <Card className="p-6 bg-card border-border">
-      <div className="flex items-center gap-2 mb-4">
-        <FileText className="w-5 h-5 text-primary" />
-        <h3 className="text-lg font-semibold text-foreground">Smart Configuration Parser</h3>
-      </div>
-      
-      <p className="text-sm text-muted-foreground mb-4">
-        Paste your existing network configuration file (Netplan, ifcfg, or similar) and automatically extract IP, gateway, netmask, and interface details.
-      </p>
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <Card className="overflow-hidden border-border">
+        <CollapsibleTrigger asChild>
+          <button className="w-full flex items-center justify-between px-5 py-4 hover:bg-muted/30 transition-colors text-left">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-accent/10 border border-accent/20">
+                <Sparkles className="w-4 h-4 text-accent" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Smart Config Parser</h3>
+                <p className="text-xs text-muted-foreground">
+                  Paste an existing config to auto-fill fields
+                </p>
+              </div>
+            </div>
+            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+          </button>
+        </CollapsibleTrigger>
 
-      <div className="space-y-4">
-        <div>
-          <Label htmlFor="configText" className="text-foreground">
-            Network Configuration File
-          </Label>
-          <Textarea
-            id="configText"
-            placeholder={`Paste your config here, e.g.:\n\nnetwork:\n  version: 2\n  ethernets:\n    eth0:\n      addresses: [192.168.1.10/24]\n      gateway4: 192.168.1.1`}
-            value={configText}
-            onChange={(e) => setConfigText(e.target.value)}
-            className="mt-1.5 bg-background border-input min-h-[200px] font-mono text-sm"
-          />
-        </div>
+        <CollapsibleContent>
+          <CardContent className="pt-0 pb-5 px-5 border-t border-border">
+            <div className="space-y-4 pt-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="configText" className="text-foreground text-sm">
+                  Network Configuration File
+                </Label>
+                <Textarea
+                  id="configText"
+                  placeholder={`Paste your config here, e.g.:\n\nnetwork:\n  version: 2\n  ethernets:\n    eth0:\n      addresses: [192.168.1.10/24]\n      gateway4: 192.168.1.1`}
+                  value={configText}
+                  onChange={(e) => setConfigText(e.target.value)}
+                  className="bg-background border-input min-h-[160px] font-mono text-sm resize-y"
+                />
+              </div>
 
-        <Button 
-          onClick={handleParse} 
-          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-        >
-          <Upload className="w-4 h-4 mr-2" />
-          Parse and Auto-Fill
-        </Button>
-      </div>
-    </Card>
+              <Button
+                onClick={handleParse}
+                className="w-full gap-2"
+              >
+                <Upload className="w-4 h-4" />
+                Parse &amp; Auto-Fill
+              </Button>
+            </div>
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   );
 };

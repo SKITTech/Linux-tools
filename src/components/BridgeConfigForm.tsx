@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Copy, Download, Terminal, Check, AlertCircle, Plus, Lightbulb, Globe, Link2, Router, Waypoints, Dns } from "lucide-react";
+import { Copy, Download, Terminal, Check, AlertCircle, Plus, Lightbulb, Globe, Router, Waypoints } from "lucide-react";
 import { toast } from "sonner";
 import { NetworkConfig, OS_OPTIONS, NETMASK_OPTIONS, ParsedConfig } from "@/types/networkConfig";
 import { generateCommands } from "@/utils/commandGenerators";

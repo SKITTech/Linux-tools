@@ -18,6 +18,8 @@ const tools = [
   { to: "/security-audit", icon: ShieldAlert, label: "Security Audit", desc: "Audit server security configurations", color: "from-destructive/20 to-destructive/5" },
   { to: "/command-library", icon: Terminal, label: "Command Library", desc: "Browse common sysadmin commands", color: "from-success/20 to-success/5" },
   { to: "/database-comparator", icon: GitCompare, label: "DB Comparator", desc: "Compare database structures & generate fix SQL", color: "from-primary/20 to-primary/5" },
+  { to: "/error-solver", icon: AlertTriangle, label: "Error Solver", desc: "AI-powered error diagnosis and solutions", color: "from-destructive/20 to-destructive/5" },
+  { to: "/text-compare", icon: FileSearch, label: "Text Compare", desc: "Compare and diff text side by side", color: "from-accent/20 to-accent/5" },
 ];
 
 const Dashboard = () => {

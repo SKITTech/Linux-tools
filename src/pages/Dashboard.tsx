@@ -3,7 +3,7 @@ import { Sidebar } from "@/components/Sidebar";
 import {
   Activity, Network, Wifi, Globe, Shield, FileText,
   ShieldAlert, Terminal, GitCompare, ArrowRight, Sparkles,
-  AlertTriangle, FileSearch, Github, GitBranch,
+  AlertTriangle, FileSearch,
 } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
@@ -21,8 +21,6 @@ const tools = [
   { to: "/database-comparator", icon: GitCompare, label: "DB Comparator", desc: "Compare database structures & generate fix SQL", color: "from-primary/20 to-primary/5" },
   { to: "/error-solver", icon: AlertTriangle, label: "Error Solver", desc: "AI-powered error diagnosis and solutions", color: "from-destructive/20 to-destructive/5" },
   { to: "/text-compare", icon: FileSearch, label: "Text Compare", desc: "Compare and diff text side by side", color: "from-accent/20 to-accent/5" },
-  { to: "/git-study-tool", icon: Github, label: "Git Study Tool", desc: "Interactive Git and GitHub commands reference", color: "from-primary/20 to-primary/5" },
-  { to: "/git-command", icon: GitBranch, label: "Git Command", desc: "Search and learn essential Git commands", color: "from-orange-500/20 to-orange-500/5" },
 ];
 
 const Dashboard = () => {

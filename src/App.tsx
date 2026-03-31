@@ -16,8 +16,6 @@ import CommandLibrary from "./pages/CommandLibrary";
 import DatabaseComparator from "./pages/DatabaseComparator";
 import ErrorSolver from "./pages/ErrorSolver";
 import TextCompare from "./pages/TextCompare";
-import GitStudyTool from "./pages/GitStudyTool";
-import GitCommand from "./pages/GitCommand";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,8 +40,6 @@ const App = () => (
             <Route path="/database-comparator" element={<DatabaseComparator />} />
             <Route path="/error-solver" element={<ErrorSolver />} />
             <Route path="/text-compare" element={<TextCompare />} />
-            <Route path="/git-study-tool" element={<GitStudyTool />} />
-            <Route path="/git-command" element={<GitCommand />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

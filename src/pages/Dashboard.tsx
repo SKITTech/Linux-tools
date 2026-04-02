@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Sidebar } from "@/components/Sidebar";
 import {
   Activity, Network, Wifi, Globe, Shield, FileText,
-  ShieldAlert, Terminal, GitCompare, ArrowRight, Sparkles,
+  Terminal, GitCompare, ArrowRight, Sparkles,
   AlertTriangle, FileSearch,
 } from "lucide-react";
 

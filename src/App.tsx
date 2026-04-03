@@ -16,6 +16,7 @@ import CommandLibrary from "./pages/CommandLibrary";
 import DatabaseComparator from "./pages/DatabaseComparator";
 import ErrorSolver from "./pages/ErrorSolver";
 import TextCompare from "./pages/TextCompare";
+import WritingTools from "./pages/WritingTools";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/database-comparator" element={<DatabaseComparator />} />
             <Route path="/error-solver" element={<ErrorSolver />} />
             <Route path="/text-compare" element={<TextCompare />} />
+            <Route path="/writing-tools" element={<WritingTools />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

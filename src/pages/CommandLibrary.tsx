@@ -1,11 +1,9 @@
 import { useState, useMemo, useCallback } from "react";
-import { Terminal, Search, Copy, Check, Zap, BookOpen, Tag, ArrowRight, Loader2, Sparkles, Clock, Star, AlertTriangle } from "lucide-react";
+import { Terminal, Search, Copy, Check, Zap, Tag, ArrowRight, Loader2, Sparkles, Clock, Star, AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 import { Sidebar } from "@/components/Sidebar";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -651,14 +649,31 @@ const CommandLibrary = () => {
     });
   }, []);
 
-  const handleSearch = useCallback(() => {
+  const handleSearch = useCallback(async () => {
     const q = searchQuery.toLowerCase().trim();
+    if (!q) return;
     if (commandDatabase[q]) {
       selectCommand(commandDatabase[q]);
     } else if (filteredCommands.length === 1) {
       selectCommand(filteredCommands[0]);
-    } else {
-      toast.error(`Command "${searchQuery}" not found. Try the AI Command Finder!`);
+    } else if (filteredCommands.length === 0) {
+      // Auto-fallback to AI Command Finder
+      setAiQuery(searchQuery);
+      setAiLoading(true);
+      setAiResult(null);
+      setSelectedCommand(null);
+      try {
+        const { data, error } = await supabase.functions.invoke("command-finder", {
+          body: { query: searchQuery },
+        });
+        if (error) throw error;
+        setAiResult(data);
+        toast.success("Command not in local database — AI found a result!");
+      } catch (err: any) {
+        toast.error("AI search failed: " + (err.message || "Unknown error"));
+      } finally {
+        setAiLoading(false);
+      }
     }
   }, [searchQuery, filteredCommands, selectCommand]);
 
@@ -669,22 +684,6 @@ const CommandLibrary = () => {
     setTimeout(() => setCopiedCommand(null), 2000);
   };
 
-  const handleAiSearch = async () => {
-    if (!aiQuery.trim()) return;
-    setAiLoading(true);
-    setAiResult(null);
-    try {
-      const { data, error } = await supabase.functions.invoke("command-finder", {
-        body: { query: aiQuery },
-      });
-      if (error) throw error;
-      setAiResult(data);
-    } catch (err: any) {
-      toast.error("AI search failed: " + (err.message || "Unknown error"));
-    } finally {
-      setAiLoading(false);
-    }
-  };
 
   return (
     <Sidebar>
@@ -705,14 +704,7 @@ const CommandLibrary = () => {
         </header>
 
         <main className="container mx-auto px-6 py-6 space-y-6">
-          <Tabs defaultValue="browse" className="w-full">
-            <TabsList className="w-full max-w-md">
-              <TabsTrigger value="browse" className="flex-1 gap-2"><BookOpen className="w-4 h-4" /> Browse & Search</TabsTrigger>
-              <TabsTrigger value="ai" className="flex-1 gap-2"><Sparkles className="w-4 h-4" /> AI Command Finder</TabsTrigger>
-            </TabsList>
-
-            {/* ─── Browse Tab ─── */}
-            <TabsContent value="browse" className="mt-6 space-y-6">
+          <div className="w-full space-y-6">
               {/* Search */}
               <div className="relative">
                 <div className="flex gap-2">
@@ -881,54 +873,33 @@ const CommandLibrary = () => {
                       </Card>
                     </button>
                   ))}
-                  {filteredCommands.length === 0 && (
+                  {filteredCommands.length === 0 && !aiLoading && !aiResult && (
                     <div className="col-span-full text-center py-12 text-muted-foreground">
                       <Terminal className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                      <p>No commands found. Try the AI Command Finder tab!</p>
+                      <p>No commands found. Press Search to use AI Command Finder!</p>
                     </div>
                   )}
                 </div>
               )}
-            </TabsContent>
 
-            {/* ─── AI Command Finder Tab ─── */}
-            <TabsContent value="ai" className="mt-6 space-y-6">
-              <Card className="p-6 bg-card/80 backdrop-blur border-border/50">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Sparkles className="w-4 h-4 text-primary" />
+              {/* AI Loading */}
+              {aiLoading && (
+                <Card className="p-8 bg-card/80 backdrop-blur border-border/50">
+                  <div className="flex flex-col items-center justify-center text-muted-foreground">
+                    <Loader2 className="w-8 h-8 animate-spin mb-3 text-primary" />
+                    <p className="text-sm">AI is finding the right command...</p>
                   </div>
-                  <div>
-                    <h2 className="font-semibold text-foreground">AI Command Finder</h2>
-                    <p className="text-xs text-muted-foreground">Describe what you want to do, and AI will find the right command</p>
-                  </div>
-                </div>
-                <Textarea
-                  value={aiQuery}
-                  onChange={(e) => setAiQuery(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleAiSearch(); } }}
-                  placeholder="e.g., 'Find all files larger than 1GB modified in the last week' or 'Monitor CPU usage in real-time'"
-                  className="min-h-[80px] bg-muted/20 border-border/50 mb-3"
-                />
-                <div className="flex items-center justify-between">
-                  <div className="flex gap-2 flex-wrap">
-                    {["Find large files", "Check disk space", "Monitor network", "Kill process by name", "Compress a directory"].map(q => (
-                      <button key={q} onClick={() => { setAiQuery(q); }} className="text-xs px-2 py-1 rounded-md bg-muted/40 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors">
-                        {q}
-                      </button>
-                    ))}
-                  </div>
-                  <Button onClick={handleAiSearch} disabled={aiLoading || !aiQuery.trim()} className="gap-2">
-                    {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                    {aiLoading ? "Searching..." : "Find Command"}
-                  </Button>
-                </div>
-              </Card>
+                </Card>
+              )}
 
-              {/* AI Result */}
-              {aiResult && (
+              {/* AI Result (inline) */}
+              {aiResult && !selectedCommand && (
                 <div className="space-y-4">
-                  {/* Main Command */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-medium text-primary">AI Command Finder Result</span>
+                    <button onClick={() => setAiResult(null)} className="text-xs text-muted-foreground hover:text-foreground ml-auto">✕ Clear</button>
+                  </div>
                   <Card className="p-6 bg-card/80 backdrop-blur border-border/50">
                     <div className="flex items-center gap-2 mb-3">
                       <Star className="w-4 h-4 text-primary" />
@@ -943,7 +914,6 @@ const CommandLibrary = () => {
                     <p className="text-sm text-muted-foreground">{aiResult.explanation}</p>
                   </Card>
 
-                  {/* Examples */}
                   {aiResult.examples?.length > 0 && (
                     <Card className="p-6 bg-card/80 backdrop-blur border-border/50">
                       <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
@@ -966,7 +936,6 @@ const CommandLibrary = () => {
                   )}
 
                   <div className="grid md:grid-cols-2 gap-4">
-                    {/* Alternatives */}
                     {aiResult.alternatives?.length > 0 && (
                       <Card className="p-6 bg-card/80 backdrop-blur border-border/50">
                         <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
@@ -985,7 +954,6 @@ const CommandLibrary = () => {
                       </Card>
                     )}
 
-                    {/* Caution */}
                     {aiResult.caution && (
                       <Card className="p-6 bg-destructive/5 border-destructive/20">
                         <h3 className="font-semibold text-foreground mb-2 flex items-center gap-2">
@@ -997,8 +965,7 @@ const CommandLibrary = () => {
                   </div>
                 </div>
               )}
-            </TabsContent>
-          </Tabs>
+          </div>
         </main>
       </div>
     </Sidebar>

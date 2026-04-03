@@ -685,22 +685,6 @@ const CommandLibrary = () => {
     setTimeout(() => setCopiedCommand(null), 2000);
   };
 
-  const handleAiSearch = async () => {
-    if (!aiQuery.trim()) return;
-    setAiLoading(true);
-    setAiResult(null);
-    try {
-      const { data, error } = await supabase.functions.invoke("command-finder", {
-        body: { query: aiQuery },
-      });
-      if (error) throw error;
-      setAiResult(data);
-    } catch (err: any) {
-      toast.error("AI search failed: " + (err.message || "Unknown error"));
-    } finally {
-      setAiLoading(false);
-    }
-  };
 
   return (
     <Sidebar>

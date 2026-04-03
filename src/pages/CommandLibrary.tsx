@@ -1,11 +1,10 @@
 import { useState, useMemo, useCallback } from "react";
-import { Terminal, Search, Copy, Check, Zap, BookOpen, Tag, ArrowRight, Loader2, Sparkles, Clock, Star, AlertTriangle } from "lucide-react";
+import { Terminal, Search, Copy, Check, Zap, Tag, ArrowRight, Loader2, Sparkles, Clock, Star, AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
+import { Sidebar } from "@/components/Sidebar";
 import { Sidebar } from "@/components/Sidebar";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";

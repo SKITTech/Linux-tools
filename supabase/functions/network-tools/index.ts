@@ -217,6 +217,50 @@ async function handleWhois(params: any) {
   }
 }
 
+/* ─── IP Geolocation ─── */
+async function handleIPGeolocation(params: any) {
+  const { ip } = params;
+  if (!ip) return json({ error: 'IP address is required' }, 400);
+
+  const sanitized = ip.trim();
+
+  try {
+    // Primary: ip-api.com (free, no key)
+    const resp = await fetch(`http://ip-api.com/json/${encodeURIComponent(sanitized)}?fields=status,message,continent,country,countryCode,region,regionName,city,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,mobile,proxy,hosting,query`);
+    const data = await resp.json();
+
+    if (data.status === 'fail') {
+      return json({ error: data.message || 'Geolocation lookup failed', ip: sanitized });
+    }
+
+    return json({
+      ip: data.query || sanitized,
+      continent: data.continent || 'Unknown',
+      country: data.country || 'Unknown',
+      countryCode: data.countryCode || '',
+      region: data.regionName || 'Unknown',
+      regionCode: data.region || '',
+      city: data.city || 'Unknown',
+      zip: data.zip || 'Unknown',
+      lat: data.lat,
+      lon: data.lon,
+      timezone: data.timezone || 'Unknown',
+      utcOffset: data.offset,
+      currency: data.currency || 'Unknown',
+      isp: data.isp || 'Unknown',
+      org: data.org || 'Unknown',
+      as: data.as || 'Unknown',
+      asName: data.asname || 'Unknown',
+      reverse: data.reverse || '',
+      mobile: data.mobile || false,
+      proxy: data.proxy || false,
+      hosting: data.hosting || false,
+    });
+  } catch (err: any) {
+    return json({ error: 'IP geolocation lookup failed' }, 500);
+  }
+}
+
 /* ─── SSL Certificate Check ─── */
 async function handleSSLCheck(params: any) {
   const { domain } = params;

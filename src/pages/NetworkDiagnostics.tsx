@@ -36,6 +36,7 @@ const TOOLS: ToolDef[] = [
 
   // IP Tools
   { id: "whats-my-ip", name: "What is My IP", desc: "Lookup your own IP address", icon: Eye, category: "IP Tools" },
+  { id: "ip-geolocation", name: "IP Geolocation", desc: "Find physical location of any IP", icon: MapPin, category: "IP Tools" },
   { id: "ping", name: "Ping Test", desc: "Send HTTP requests & measure latency", icon: Activity, category: "IP Tools" },
   { id: "website-to-ip", name: "Website to IP", desc: "Find IP address of a domain", icon: MapPin, category: "IP Tools" },
   { id: "whois", name: "WHOIS Lookup", desc: "Check domain registration details", icon: Search, category: "IP Tools" },

@@ -325,6 +325,19 @@ const NetworkDiagnostics = () => {
           </div>
         );
 
+      case "ip-geolocation":
+        return (
+          <div className="grid sm:grid-cols-[1fr_auto] gap-3 items-end">
+            <Field label="IP Address" hint="e.g. 8.8.8.8, 1.1.1.1, or any public IP">
+              <Input placeholder="8.8.8.8" value={ipInput} onChange={e => setIpInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && runIPGeolocation()} className="bg-background border-input" />
+            </Field>
+            <Button onClick={runIPGeolocation} disabled={loading} className="gap-2 h-10">
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
+              {loading ? "Locating..." : "Geolocate"}
+            </Button>
+          </div>
+        );
+
       case "ping":
         return (
           <div className="grid sm:grid-cols-[1fr_auto] gap-3 items-end">

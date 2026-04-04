@@ -36,6 +36,7 @@ const TOOLS: ToolDef[] = [
 
   // IP Tools
   { id: "whats-my-ip", name: "What is My IP", desc: "Lookup your own IP address", icon: Eye, category: "IP Tools" },
+  { id: "ip-geolocation", name: "IP Geolocation", desc: "Find physical location of any IP", icon: MapPin, category: "IP Tools" },
   { id: "ping", name: "Ping Test", desc: "Send HTTP requests & measure latency", icon: Activity, category: "IP Tools" },
   { id: "website-to-ip", name: "Website to IP", desc: "Find IP address of a domain", icon: MapPin, category: "IP Tools" },
   { id: "whois", name: "WHOIS Lookup", desc: "Check domain registration details", icon: Search, category: "IP Tools" },
@@ -271,6 +272,20 @@ const NetworkDiagnostics = () => {
     finally { setLoading(false); }
   };
 
+  const runIPGeolocation = async () => {
+    if (!ipInput.trim()) { toast.error("Enter an IP address"); return; }
+    setLoading(true); resetResults();
+    try {
+      const { data, error } = await supabase.functions.invoke('network-tools', {
+        body: { tool: 'ip-geolocation', ip: ipInput.trim() },
+      });
+      if (error) throw error;
+      setResult({ type: 'ip-geolocation', data });
+      toast.success(`Geolocation found for ${data.ip}`);
+    } catch (err: any) { toast.error(err.message || "Geolocation failed"); }
+    finally { setLoading(false); }
+  };
+
   /* ─── Tool Forms ─── */
   const renderToolForm = () => {
     const tool = TOOLS.find(t => t.id === activeTool);
@@ -320,6 +335,19 @@ const NetworkDiagnostics = () => {
             <Button onClick={runWhatsMyIP} disabled={loading} className="gap-2 shrink-0">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
               {loading ? "Detecting..." : "Detect My IP"}
+            </Button>
+          </div>
+        );
+
+      case "ip-geolocation":
+        return (
+          <div className="grid sm:grid-cols-[1fr_auto] gap-3 items-end">
+            <Field label="IP Address" hint="e.g. 8.8.8.8, 1.1.1.1, or any public IP">
+              <Input placeholder="8.8.8.8" value={ipInput} onChange={e => setIpInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && runIPGeolocation()} className="bg-background border-input" />
+            </Field>
+            <Button onClick={runIPGeolocation} disabled={loading} className="gap-2 h-10">
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
+              {loading ? "Locating..." : "Geolocate"}
             </Button>
           </div>
         );
@@ -592,6 +620,40 @@ const NetworkDiagnostics = () => {
               {data.protocol && <div className="flex gap-3"><span className="text-muted-foreground w-28">Protocol:</span><span>{data.protocol}</span></div>}
               {data.error && <div className="flex gap-3"><span className="text-muted-foreground w-28">Error:</span><span className="text-destructive">{data.error}</span></div>}
             </div>
+          </ResultPanel>
+        );
+
+      case 'ip-geolocation':
+        return (
+          <ResultPanel title={`geolocate ${data.ip}`} onCopy={JSON.stringify(data, null, 2)}>
+            {data.error ? (
+              <p className="text-destructive">{data.error}</p>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid sm:grid-cols-2 gap-x-8 gap-y-2">
+                  <div className="flex gap-3"><span className="text-muted-foreground w-28">IP Address:</span><span className="text-accent font-bold">{data.ip}</span></div>
+                  <div className="flex gap-3"><span className="text-muted-foreground w-28">Continent:</span><span>{data.continent}</span></div>
+                  <div className="flex gap-3"><span className="text-muted-foreground w-28">Country:</span><span>{data.country} {data.countryCode ? `(${data.countryCode})` : ''}</span></div>
+                  <div className="flex gap-3"><span className="text-muted-foreground w-28">Region:</span><span>{data.region} {data.regionCode ? `(${data.regionCode})` : ''}</span></div>
+                  <div className="flex gap-3"><span className="text-muted-foreground w-28">City:</span><span>{data.city}</span></div>
+                  <div className="flex gap-3"><span className="text-muted-foreground w-28">ZIP Code:</span><span>{data.zip}</span></div>
+                  <div className="flex gap-3"><span className="text-muted-foreground w-28">Latitude:</span><span>{data.lat}</span></div>
+                  <div className="flex gap-3"><span className="text-muted-foreground w-28">Longitude:</span><span>{data.lon}</span></div>
+                  <div className="flex gap-3"><span className="text-muted-foreground w-28">Timezone:</span><span>{data.timezone}</span></div>
+                  <div className="flex gap-3"><span className="text-muted-foreground w-28">Currency:</span><span>{data.currency}</span></div>
+                  <div className="flex gap-3"><span className="text-muted-foreground w-28">ISP:</span><span>{data.isp}</span></div>
+                  <div className="flex gap-3"><span className="text-muted-foreground w-28">Organization:</span><span>{data.org}</span></div>
+                  <div className="flex gap-3"><span className="text-muted-foreground w-28">AS Number:</span><span>{data.as}</span></div>
+                  {data.reverse && <div className="flex gap-3"><span className="text-muted-foreground w-28">Reverse DNS:</span><span>{data.reverse}</span></div>}
+                </div>
+                <div className="flex flex-wrap gap-2 pt-2 border-t border-[hsl(var(--terminal-border))]">
+                  {data.mobile && <Badge variant="secondary" className="text-xs">📱 Mobile</Badge>}
+                  {data.proxy && <Badge className="bg-destructive text-destructive-foreground text-xs">🛡️ Proxy/VPN</Badge>}
+                  {data.hosting && <Badge variant="secondary" className="text-xs">☁️ Hosting/DC</Badge>}
+                  {!data.mobile && !data.proxy && !data.hosting && <Badge className="bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))] text-xs">✓ Residential</Badge>}
+                </div>
+              </div>
+            )}
           </ResultPanel>
         );
 

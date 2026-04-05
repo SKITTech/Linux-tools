@@ -1,23 +1,25 @@
 import { useState } from "react";
 import {
   CheckCircle, Copy, Check, Loader2, Sparkles, Languages, FileText,
-  Mail, AlignLeft, Maximize2, PenTool, ArrowRight, Lightbulb, AlertCircle
+  Mail, AlignLeft, Maximize2, PenTool, ArrowRight, Lightbulb, AlertCircle,
+  Wand2, RotateCcw, Type, Zap
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sidebar } from "@/components/Sidebar";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 const tools = [
-  { id: "enhance", label: "Text Enhancer", icon: Sparkles, description: "Grammar check + Professional + Casual tone — all at once", color: "text-emerald-500" },
-  { id: "translate", label: "Translator", icon: Languages, description: "Translate to any language", color: "text-purple-500" },
-  { id: "summarize", label: "Summarize", icon: FileText, description: "Condense text to key points", color: "text-cyan-500" },
-  { id: "expand", label: "Expand", icon: Maximize2, description: "Add detail and depth", color: "text-orange-500" },
-  { id: "email-suggestions", label: "Email Writer", icon: Mail, description: "Get 3 email options from your message", color: "text-rose-500" },
+  { id: "enhance", label: "Text Enhancer", icon: Wand2, description: "Improve grammar, tone & style instantly", color: "text-emerald-500" },
+  { id: "translate", label: "Translator", icon: Languages, description: "Translate to 25+ languages", color: "text-purple-500" },
+  { id: "summarize", label: "Summarizer", icon: FileText, description: "Extract key points concisely", color: "text-cyan-500" },
+  { id: "expand", label: "Expander", icon: Maximize2, description: "Enrich with detail & depth", color: "text-orange-500" },
+  { id: "email-suggestions", label: "Email Writer", icon: Mail, description: "Generate polished email drafts", color: "text-rose-500" },
 ];
 
 const languages = [
@@ -37,7 +39,7 @@ const WritingTools = () => {
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
     setCopied(id);
-    toast.success("Copied!");
+    toast.success("Copied to clipboard");
     setTimeout(() => setCopied(null), 2000);
   };
 
@@ -60,7 +62,13 @@ const WritingTools = () => {
       if (data?.error) throw new Error(data.error);
       setResult(data);
     } catch (err: any) {
-      toast.error(err.message || "Processing failed");
+      if (err.message?.includes("429") || err.message?.includes("Rate limit")) {
+        toast.error("Rate limit reached. Please wait a moment and try again.");
+      } else if (err.message?.includes("402") || err.message?.includes("Credits")) {
+        toast.error("Credits exhausted. Please add funds in Settings → Workspace → Usage.");
+      } else {
+        toast.error(err.message || "Processing failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -69,139 +77,178 @@ const WritingTools = () => {
   const currentTool = tools.find(t => t.id === selectedTool)!;
   const Icon = currentTool.icon;
 
+  const wordCount = inputText.trim().split(/\s+/).filter(Boolean).length;
+  const charCount = inputText.length;
+
+  const CopyBtn = ({ text, id, label }: { text: string; id: string; label?: string }) => (
+    <Button
+      size="sm"
+      variant="outline"
+      className="h-7 gap-1.5 text-xs"
+      onClick={() => copyToClipboard(text, id)}
+    >
+      {copied === id ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+      {label || "Copy"}
+    </Button>
+  );
+
   const renderEnhanceResult = () => {
     if (!result) return null;
     const { grammar, professional, casual } = result;
     return (
-      <div className="space-y-5">
-        {/* Grammar Check */}
-        {grammar && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-emerald-500" />
-                <h3 className="font-semibold text-foreground text-sm">Grammar Check</h3>
-                {grammar.score !== undefined && (
-                  <Badge variant="outline" className={grammar.score >= 90 ? "text-emerald-500 border-emerald-500/30" : grammar.score >= 70 ? "text-amber-500 border-amber-500/30" : "text-red-500 border-red-500/30"}>
-                    {grammar.score}/100
-                  </Badge>
-                )}
+      <Tabs defaultValue="grammar" className="w-full">
+        <TabsList className="w-full grid grid-cols-3 mb-4">
+          <TabsTrigger value="grammar" className="gap-1.5 text-xs">
+            <CheckCircle className="w-3.5 h-3.5" /> Grammar
+            {grammar?.score !== undefined && (
+              <Badge variant="secondary" className={`ml-1 text-[10px] px-1.5 py-0 ${grammar.score >= 90 ? "bg-emerald-500/10 text-emerald-500" : grammar.score >= 70 ? "bg-amber-500/10 text-amber-500" : "bg-red-500/10 text-red-500"}`}>
+                {grammar.score}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="professional" className="gap-1.5 text-xs">
+            <PenTool className="w-3.5 h-3.5" /> Professional
+          </TabsTrigger>
+          <TabsTrigger value="casual" className="gap-1.5 text-xs">
+            <AlignLeft className="w-3.5 h-3.5" /> Casual
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="grammar" className="space-y-4 mt-0">
+          {grammar && (
+            <>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-foreground text-sm">Corrected Text</h3>
+                  {grammar.score !== undefined && (
+                    <Badge variant="outline" className={`${grammar.score >= 90 ? "text-emerald-500 border-emerald-500/30 bg-emerald-500/5" : grammar.score >= 70 ? "text-amber-500 border-amber-500/30 bg-amber-500/5" : "text-red-500 border-red-500/30 bg-red-500/5"}`}>
+                      Score: {grammar.score}/100
+                    </Badge>
+                  )}
+                </div>
+                <CopyBtn text={grammar.corrected || ""} id="grammar" />
               </div>
-              <Button size="sm" variant="ghost" className="h-7 gap-1" onClick={() => copyToClipboard(grammar.corrected || "", "grammar")}>
-                {copied === "grammar" ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-              </Button>
-            </div>
-            <div className="bg-muted/20 rounded-lg p-3 text-sm text-foreground whitespace-pre-wrap">{grammar.corrected}</div>
-            {grammar.changes?.length > 0 && (
-              <div className="space-y-1.5">
-                {grammar.changes.map((c: any, i: number) => (
-                  <div key={i} className="flex items-center gap-2 text-xs bg-muted/10 rounded p-2">
-                    <span className="line-through text-red-400">{c.original}</span>
-                    <ArrowRight className="w-3 h-3 text-muted-foreground shrink-0" />
-                    <span className="text-emerald-500 font-medium">{c.corrected}</span>
-                    <span className="text-muted-foreground ml-auto">— {c.reason}</span>
+              <div className="bg-muted/30 rounded-xl p-4 text-sm text-foreground whitespace-pre-wrap leading-relaxed border border-border/30">
+                {grammar.corrected}
+              </div>
+              {grammar.changes?.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Changes Made</h4>
+                  <div className="space-y-1.5">
+                    {grammar.changes.map((c: any, i: number) => (
+                      <div key={i} className="flex items-center gap-3 text-xs bg-muted/20 rounded-lg p-2.5 border border-border/20">
+                        <span className="line-through text-red-400 shrink-0">{c.original}</span>
+                        <ArrowRight className="w-3 h-3 text-muted-foreground shrink-0" />
+                        <span className="text-emerald-500 font-medium shrink-0">{c.corrected}</span>
+                        <span className="text-muted-foreground ml-auto text-right">{c.reason}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-            {grammar.summary && <p className="text-xs text-muted-foreground">{grammar.summary}</p>}
-          </div>
-        )}
+                </div>
+              )}
+              {grammar.summary && (
+                <p className="text-xs text-muted-foreground bg-muted/10 rounded-lg p-3 border border-border/20">{grammar.summary}</p>
+              )}
+            </>
+          )}
+        </TabsContent>
 
-        <div className="border-t border-border/30" />
-
-        {/* Professional Tone */}
-        {professional && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <PenTool className="w-4 h-4 text-blue-500" />
-                <h3 className="font-semibold text-foreground text-sm">Professional Tone</h3>
+        <TabsContent value="professional" className="space-y-4 mt-0">
+          {professional && (
+            <>
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-foreground text-sm">Professional Version</h3>
+                <CopyBtn text={professional.rewritten || ""} id="pro" />
               </div>
-              <Button size="sm" variant="ghost" className="h-7 gap-1" onClick={() => copyToClipboard(professional.rewritten || "", "pro")}>
-                {copied === "pro" ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-              </Button>
-            </div>
-            <div className="bg-muted/20 rounded-lg p-3 text-sm text-foreground whitespace-pre-wrap">{professional.rewritten}</div>
-            {professional.improvements?.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {professional.improvements.map((imp: string, i: number) => (
-                  <Badge key={i} variant="outline" className="text-xs bg-blue-500/5 text-blue-400 border-blue-500/20">{imp}</Badge>
-                ))}
+              <div className="bg-blue-500/5 rounded-xl p-4 text-sm text-foreground whitespace-pre-wrap leading-relaxed border border-blue-500/10">
+                {professional.rewritten}
               </div>
-            )}
-          </div>
-        )}
+              {professional.improvements?.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Improvements</h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {professional.improvements.map((imp: string, i: number) => (
+                      <Badge key={i} variant="outline" className="text-xs bg-blue-500/5 text-blue-400 border-blue-500/20">{imp}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {professional.tip && (
+                <div className="flex items-start gap-2 bg-primary/5 border border-primary/10 rounded-xl p-3 text-sm text-muted-foreground">
+                  <Lightbulb className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                  <span><strong className="text-foreground">Pro Tip:</strong> {professional.tip}</span>
+                </div>
+              )}
+            </>
+          )}
+        </TabsContent>
 
-        <div className="border-t border-border/30" />
-
-        {/* Casual Tone */}
-        {casual && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <AlignLeft className="w-4 h-4 text-amber-500" />
-                <h3 className="font-semibold text-foreground text-sm">Casual Tone</h3>
+        <TabsContent value="casual" className="space-y-4 mt-0">
+          {casual && (
+            <>
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-foreground text-sm">Casual Version</h3>
+                <CopyBtn text={casual.rewritten || ""} id="casual" />
               </div>
-              <Button size="sm" variant="ghost" className="h-7 gap-1" onClick={() => copyToClipboard(casual.rewritten || "", "casual")}>
-                {copied === "casual" ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-              </Button>
-            </div>
-            <div className="bg-muted/20 rounded-lg p-3 text-sm text-foreground whitespace-pre-wrap">{casual.rewritten}</div>
-            {casual.improvements?.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {casual.improvements.map((imp: string, i: number) => (
-                  <Badge key={i} variant="outline" className="text-xs bg-amber-500/5 text-amber-400 border-amber-500/20">{imp}</Badge>
-                ))}
+              <div className="bg-amber-500/5 rounded-xl p-4 text-sm text-foreground whitespace-pre-wrap leading-relaxed border border-amber-500/10">
+                {casual.rewritten}
               </div>
-            )}
-          </div>
-        )}
-
-        {/* Tips */}
-        {(professional?.tip || casual?.tip) && (
-          <>
-            <div className="border-t border-border/30" />
-            <div className="flex items-start gap-2 bg-primary/5 border border-primary/10 rounded-lg p-3 text-sm text-muted-foreground">
-              <Lightbulb className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-              <span><strong className="text-foreground">Tip:</strong> {professional?.tip || casual?.tip}</span>
-            </div>
-          </>
-        )}
-      </div>
+              {casual.improvements?.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Changes</h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {casual.improvements.map((imp: string, i: number) => (
+                      <Badge key={i} variant="outline" className="text-xs bg-amber-500/5 text-amber-400 border-amber-500/20">{imp}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {casual.tip && (
+                <div className="flex items-start gap-2 bg-amber-500/5 border border-amber-500/10 rounded-xl p-3 text-sm text-muted-foreground">
+                  <Lightbulb className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+                  <span><strong className="text-foreground">Tip:</strong> {casual.tip}</span>
+                </div>
+              )}
+            </>
+          )}
+        </TabsContent>
+      </Tabs>
     );
   };
 
   const renderEmailSuggestions = () => {
     if (!result?.suggestions) return null;
     return (
-      <div className="space-y-4">
+      <Tabs defaultValue="0" className="w-full">
+        <TabsList className="w-full grid grid-cols-3 mb-4">
+          {result.suggestions.map((s: any, i: number) => (
+            <TabsTrigger key={i} value={String(i)} className="gap-1.5 text-xs">
+              <Mail className="w-3.5 h-3.5" /> {s.tone}
+            </TabsTrigger>
+          ))}
+        </TabsList>
         {result.suggestions.map((s: any, i: number) => (
-          <div key={i} className="space-y-2">
+          <TabsContent key={i} value={String(i)} className="space-y-4 mt-0">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-rose-500" />
-                <h3 className="font-semibold text-foreground text-sm">Option {i + 1}: {s.tone}</h3>
-              </div>
-              <Button size="sm" variant="ghost" className="h-7 gap-1" onClick={() => copyToClipboard(`Subject: ${s.subject}\n\n${s.email}`, `email-${i}`)}>
-                {copied === `email-${i}` ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-              </Button>
+              <h3 className="font-semibold text-foreground text-sm">{s.tone} Email</h3>
+              <CopyBtn text={`Subject: ${s.subject}\n\n${s.email}`} id={`email-${i}`} />
             </div>
-            <div className="bg-primary/5 rounded-lg p-2 px-3">
-              <span className="text-xs text-muted-foreground">Subject: </span>
-              <span className="text-sm font-medium text-foreground">{s.subject}</span>
+            <div className="bg-primary/5 rounded-xl p-3 border border-primary/10">
+              <span className="text-xs text-muted-foreground font-medium">Subject: </span>
+              <span className="text-sm font-semibold text-foreground">{s.subject}</span>
             </div>
-            <div className="bg-muted/20 rounded-lg p-3 text-sm text-foreground whitespace-pre-wrap">{s.email}</div>
-            {i < result.suggestions.length - 1 && <div className="border-t border-border/30" />}
-          </div>
+            <div className="bg-muted/30 rounded-xl p-4 text-sm text-foreground whitespace-pre-wrap leading-relaxed border border-border/30">
+              {s.email}
+            </div>
+          </TabsContent>
         ))}
         {result.tip && (
-          <div className="flex items-start gap-2 bg-primary/5 border border-primary/10 rounded-lg p-3 text-sm text-muted-foreground">
+          <div className="flex items-start gap-2 bg-primary/5 border border-primary/10 rounded-xl p-3 text-sm text-muted-foreground mt-4">
             <Lightbulb className="w-4 h-4 text-primary mt-0.5 shrink-0" />
             <span><strong className="text-foreground">Tip:</strong> {result.tip}</span>
           </div>
         )}
-      </div>
+      </Tabs>
     );
   };
 
@@ -210,57 +257,95 @@ const WritingTools = () => {
     const outputText = result.translated || result.summary || result.expanded || "";
     return (
       <div className="space-y-4">
-        <div className="flex justify-end">
-          <Button size="sm" variant="ghost" className="h-7 gap-1" onClick={() => copyToClipboard(outputText, "std")}>
-            {copied === "std" ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-          </Button>
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-foreground text-sm flex items-center gap-2">
+            <Zap className="w-4 h-4 text-primary" />
+            {selectedTool === "translate" ? "Translation" : selectedTool === "summarize" ? "Summary" : "Expanded Text"}
+          </h3>
+          <div className="flex items-center gap-2">
+            {(result.wordReduction || result.wordIncrease) && (
+              <Badge variant="outline" className="text-xs bg-muted/30">{result.wordReduction || result.wordIncrease}</Badge>
+            )}
+            <CopyBtn text={outputText} id="std" />
+          </div>
         </div>
-        <div className="bg-muted/20 rounded-lg p-4 min-h-[200px]">
-          <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{outputText}</p>
-        </div>
-        {result.keyPoints?.length > 0 && (
-          <div className="space-y-1">
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Key Points</h4>
-            {result.keyPoints.map((kp: string, i: number) => (
-              <div key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                <Lightbulb className="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0" />
-                {kp}
-              </div>
-            ))}
+
+        {result.sourceLanguage && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Badge variant="outline" className="bg-purple-500/5 text-purple-400 border-purple-500/20">
+              {result.sourceLanguage} → {result.targetLanguage}
+            </Badge>
           </div>
         )}
+
+        <div className="bg-muted/30 rounded-xl p-4 min-h-[180px] border border-border/30">
+          <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{outputText}</p>
+        </div>
+
+        {result.keyPoints?.length > 0 && (
+          <div className="space-y-2">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Key Points</h4>
+            <div className="space-y-1.5">
+              {result.keyPoints.map((kp: string, i: number) => (
+                <div key={i} className="flex items-start gap-2 text-sm text-muted-foreground bg-muted/10 rounded-lg p-2 border border-border/20">
+                  <Lightbulb className="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0" />
+                  {kp}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {result.notes && (
-          <div className="flex items-start gap-2 bg-muted/20 rounded-lg p-3 text-sm text-muted-foreground">
+          <div className="flex items-start gap-2 bg-muted/20 rounded-xl p-3 text-sm text-muted-foreground border border-border/20">
             <AlertCircle className="w-4 h-4 text-primary mt-0.5 shrink-0" />
             {result.notes}
           </div>
         )}
-        {(result.wordReduction || result.wordIncrease) && (
-          <Badge variant="outline" className="bg-muted/30">{result.wordReduction || result.wordIncrease}</Badge>
+
+        {result.addedDetails?.length > 0 && (
+          <div className="space-y-2">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Added Details</h4>
+            <div className="flex flex-wrap gap-1.5">
+              {result.addedDetails.map((d: string, i: number) => (
+                <Badge key={i} variant="outline" className="text-xs bg-orange-500/5 text-orange-400 border-orange-500/20">{d}</Badge>
+              ))}
+            </div>
+          </div>
         )}
+
         {outputText && (
           <Button variant="outline" size="sm" onClick={() => { setInputText(outputText); setResult(null); }} className="gap-2">
-            <ArrowRight className="w-3.5 h-3.5" /> Use as Input
+            <RotateCcw className="w-3.5 h-3.5" /> Use as Input
           </Button>
         )}
       </div>
     );
   };
 
+  const placeholders: Record<string, string> = {
+    enhance: "Paste your text here to check grammar, get professional & casual rewrites...",
+    translate: "Enter text to translate into another language...",
+    summarize: "Paste a long article, email, or document to get a concise summary...",
+    expand: "Enter a short text or outline to expand with more detail...",
+    "email-suggestions": "Describe your email intent (e.g., 'Follow up with client about project deadline')...",
+  };
+
   return (
     <Sidebar>
       <div className="min-h-screen bg-background">
+        {/* Header */}
         <header className="border-b border-border/50 bg-gradient-to-br from-primary/5 via-background to-accent/5">
-          <div className="container mx-auto px-6 py-8">
-            <div className="flex items-center gap-3 mb-1">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-primary" />
+          <div className="container mx-auto px-6 py-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/10">
+                <Type className="w-5 h-5 text-primary" />
               </div>
-              <h1 className="text-3xl font-bold text-foreground tracking-tight">Writing Tools</h1>
+              <div>
+                <h1 className="text-2xl font-bold text-foreground tracking-tight">Writing Tools</h1>
+                <p className="text-sm text-muted-foreground">AI-powered writing assistant for grammar, tone, translation & email</p>
+              </div>
             </div>
-            <p className="text-muted-foreground ml-[52px]">
-              AI-powered grammar check, tone adjustment, translation & more
-            </p>
           </div>
         </header>
 
@@ -274,33 +359,38 @@ const WritingTools = () => {
                 <button
                   key={tool.id}
                   onClick={() => { setSelectedTool(tool.id); setResult(null); }}
-                  className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all duration-200 ${
+                  className={`group relative flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
                     isActive
-                      ? "bg-primary/10 border-primary/30 shadow-sm"
-                      : "bg-card/80 border-border/50 hover:border-primary/20 hover:bg-muted/40"
+                      ? "bg-primary/10 border-primary/30 shadow-md shadow-primary/5"
+                      : "bg-card/80 border-border/50 hover:border-primary/20 hover:bg-muted/30 hover:shadow-sm"
                   }`}
                 >
-                  <TIcon className={`w-5 h-5 ${isActive ? "text-primary" : tool.color}`} />
+                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
+                    isActive ? "bg-primary/20" : "bg-muted/30 group-hover:bg-muted/50"
+                  }`}>
+                    <TIcon className={`w-4.5 h-4.5 ${isActive ? "text-primary" : tool.color}`} />
+                  </div>
                   <span className={`text-xs font-medium ${isActive ? "text-primary" : "text-muted-foreground"}`}>{tool.label}</span>
+                  <span className="text-[10px] text-muted-foreground/60 text-center leading-tight hidden sm:block">{tool.description}</span>
                 </button>
               );
             })}
           </div>
 
+          {/* Main Content */}
           <div className={`grid ${selectedTool === "enhance" || selectedTool === "email-suggestions" ? "lg:grid-cols-[1fr_1.5fr]" : "lg:grid-cols-2"} gap-6`}>
-            {/* Input */}
-            <Card className="p-6 bg-card/80 backdrop-blur border-border/50">
-              <div className="flex items-center justify-between mb-4">
+            {/* Input Panel */}
+            <Card className="p-5 bg-card/80 backdrop-blur border-border/50 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <Icon className={`w-4 h-4 ${currentTool.color}`} />
-                  <h2 className="font-semibold text-foreground">{currentTool.label}</h2>
+                  <h2 className="font-semibold text-foreground text-sm">{currentTool.label}</h2>
                 </div>
-                <Badge variant="outline" className="text-xs hidden sm:inline-flex">{currentTool.description}</Badge>
               </div>
 
               {selectedTool === "translate" && (
-                <div className="mb-4">
-                  <label className="text-xs text-muted-foreground mb-1.5 block">Translate to:</label>
+                <div className="mb-3">
+                  <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Translate to</label>
                   <Select value={targetLanguage} onValueChange={setTargetLanguage}>
                     <SelectTrigger className="bg-muted/20 border-border/50">
                       <SelectValue />
@@ -317,39 +407,41 @@ const WritingTools = () => {
               <Textarea
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                placeholder={
-                  selectedTool === "enhance" ? "Paste your text to get grammar check, professional & casual versions..."
-                    : selectedTool === "translate" ? "Enter text to translate..."
-                    : selectedTool === "email-suggestions" ? "Write your message idea and get 3 polished email options..."
-                    : "Enter your text here..."
-                }
-                className="min-h-[250px] bg-muted/10 border-border/50 text-sm mb-4"
+                placeholder={placeholders[selectedTool]}
+                className="min-h-[280px] bg-muted/10 border-border/50 text-sm mb-3 resize-none focus:ring-1 focus:ring-primary/20"
               />
 
               <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">
-                  {inputText.length} chars · {inputText.trim().split(/\s+/).filter(Boolean).length} words
-                </span>
-                <Button onClick={handleProcess} disabled={loading || !inputText.trim()} className="gap-2">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-muted-foreground">
+                    {charCount} chars · {wordCount} words
+                  </span>
+                  {inputText.length > 0 && (
+                    <button
+                      onClick={() => { setInputText(""); setResult(null); }}
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <Button onClick={handleProcess} disabled={loading || !inputText.trim()} className="gap-2 shadow-sm">
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                  {loading ? "Processing..." : "Process"}
+                  {loading ? "Analyzing..." : "Analyze"}
                 </Button>
               </div>
             </Card>
 
-            {/* Output */}
-            <Card className="p-6 bg-card/80 backdrop-blur border-border/50 overflow-auto max-h-[80vh]">
-              <div className="flex items-center mb-4">
-                <h2 className="font-semibold text-foreground flex items-center gap-2">
-                  <ArrowRight className="w-4 h-4 text-primary" /> Result
-                </h2>
-              </div>
-
+            {/* Output Panel */}
+            <Card className="p-5 bg-card/80 backdrop-blur border-border/50 shadow-sm overflow-auto max-h-[80vh]">
               {loading ? (
-                <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-                  <Loader2 className="w-8 h-8 animate-spin mb-3 text-primary" />
-                  <p className="text-sm">
-                    {selectedTool === "enhance" ? "Running 3 analyses in parallel..." : "Analyzing your text..."}
+                <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+                  <div className="relative">
+                    <div className="w-12 h-12 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
+                  </div>
+                  <p className="text-sm mt-4 font-medium">Analyzing your text...</p>
+                  <p className="text-xs text-muted-foreground/60 mt-1">
+                    {selectedTool === "enhance" ? "Running grammar, professional & casual analysis" : "This usually takes a few seconds"}
                   </p>
                 </div>
               ) : result ? (
@@ -357,10 +449,12 @@ const WritingTools = () => {
                   : selectedTool === "email-suggestions" ? renderEmailSuggestions()
                   : renderStandardResult()
               ) : (
-                <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-                  <Icon className={`w-12 h-12 mb-3 opacity-20 ${currentTool.color}`} />
-                  <p className="text-sm">Enter text and click Process to see results</p>
-                  <p className="text-xs mt-1 text-muted-foreground/60">Powered by AI</p>
+                <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+                  <div className="w-16 h-16 rounded-2xl bg-muted/20 flex items-center justify-center mb-4">
+                    <Icon className={`w-8 h-8 opacity-30 ${currentTool.color}`} />
+                  </div>
+                  <p className="text-sm font-medium">Ready to analyze</p>
+                  <p className="text-xs text-muted-foreground/60 mt-1">Enter your text and click Analyze</p>
                 </div>
               )}
             </Card>

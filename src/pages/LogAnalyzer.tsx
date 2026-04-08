@@ -21,7 +21,7 @@ import { Sidebar } from "@/components/Sidebar";
 import {
   parseLogs, computeStats, filterEntries, exportToCSV, exportToJSON,
   getSeverityColor, getSeverityBadgeColor, correlateEvents, detectSecurityFindings, computeHealthScore,
-  type ParsedLogEntry, type LogFormat, type LogStats, type CorrelatedEvent, type SecurityFinding,
+  type ParsedLogEntry, type LogFormat,
 } from "@/utils/logParser";
 import { supabase } from "@/integrations/supabase/client";
 

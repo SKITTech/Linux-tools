@@ -515,9 +515,21 @@ Be specific and practical. Use markdown formatting.`;
                           </SelectContent>
                         </Select>
                       )}
-                      {(searchTerm || severityFilter.length || hostFilter || serviceFilter) && (
-                        <Button variant="ghost" size="sm" className="h-9" onClick={() => { setSearchTerm(""); setSeverityFilter([]); setHostFilter(""); setServiceFilter(""); }}>
+                      {(searchTerm || severityFilter.length || hostFilter || serviceFilter || timeFrom || timeTo) && (
+                        <Button variant="ghost" size="sm" className="h-9" onClick={() => { setSearchTerm(""); setSeverityFilter([]); setHostFilter(""); setServiceFilter(""); setTimeFrom(""); setTimeTo(""); }}>
                           <RefreshCw className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                      <Label className="text-xs text-muted-foreground">Time Range:</Label>
+                      <Input type="text" placeholder="From (e.g. 10:15)" value={timeFrom} onChange={(e) => setTimeFrom(e.target.value)} className="h-8 w-[160px] text-xs font-mono" />
+                      <span className="text-xs text-muted-foreground">→</span>
+                      <Input type="text" placeholder="To (e.g. 10:25)" value={timeTo} onChange={(e) => setTimeTo(e.target.value)} className="h-8 w-[160px] text-xs font-mono" />
+                      {(timeFrom || timeTo) && (
+                        <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => { setTimeFrom(""); setTimeTo(""); }}>
+                          <XCircle className="w-3 h-3" />
                         </Button>
                       )}
                     </div>

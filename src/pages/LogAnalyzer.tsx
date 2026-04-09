@@ -92,8 +92,9 @@ const LogAnalyzer = () => {
   const [severityFilter, setSeverityFilter] = useState<ParsedLogEntry["severity"][]>([]);
   const [hostFilter, setHostFilter] = useState("");
   const [serviceFilter, setServiceFilter] = useState("");
-  const [timeFrom, setTimeFrom] = useState("");
-  const [timeTo, setTimeTo] = useState("");
+  const [customNameFilter, setCustomNameFilter] = useState("");
+  const [dateTimeFrom, setDateTimeFrom] = useState("");
+  const [dateTimeTo, setDateTimeTo] = useState("");
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
@@ -116,9 +117,10 @@ const LogAnalyzer = () => {
       search: searchTerm || undefined,
       host: hostFilter || undefined,
       service: serviceFilter || undefined,
-      timeFrom: timeFrom || undefined,
-      timeTo: timeTo || undefined,
-    }), [entries, severityFilter, searchTerm, hostFilter, serviceFilter, timeFrom, timeTo]);
+      customName: customNameFilter || undefined,
+      dateTimeFrom: dateTimeFrom || undefined,
+      dateTimeTo: dateTimeTo || undefined,
+    }), [entries, severityFilter, searchTerm, hostFilter, serviceFilter, customNameFilter, dateTimeFrom, dateTimeTo]);
 
   const uniqueHosts = useMemo(() => [...new Set(entries.map(e => e.host).filter(Boolean))] as string[], [entries]);
   const uniqueServices = useMemo(() => [...new Set(entries.map(e => e.service).filter(Boolean))] as string[], [entries]);
@@ -145,7 +147,7 @@ const LogAnalyzer = () => {
     setLogInput(""); setSearchTerm(""); setSeverityFilter([]);
     setHostFilter(""); setServiceFilter(""); setExpandedRow(null);
     setActiveTab("dashboard"); setAiAnalysis(null);
-    setTimeFrom(""); setTimeTo("");
+    setDateTimeFrom(""); setDateTimeTo(""); setCustomNameFilter("");
   };
 
   const runAIAnalysis = async () => {

@@ -15,9 +15,7 @@ interface SidebarItem {
 const navItems: SidebarItem[] = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/bridge-generator", icon: Activity, label: "Bridge Generator" },
-  { to: "/subnet-calculator", icon: Network, label: "Subnet Calculator" },
-  { to: "/network-diagnostics", icon: Wifi, label: "Network Diagnostics" },
-  { to: "/ipv6-converter", icon: Globe, label: "IPv6 Converter" },
+  { to: "/network-tools", icon: Wifi, label: "Network Tools" },
   { to: "/firewall-generator", icon: Shield, label: "Firewall Generator" },
   { to: "/log-analyzer", icon: FileText, label: "Log Analyzer" },
   

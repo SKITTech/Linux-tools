@@ -668,8 +668,7 @@ const NetworkDiagnostics = () => {
     "Network Tools": { icon: Shield, color: "text-[hsl(var(--success))]", desc: "Port scanning, HTTP headers, and SSL verification" },
   };
 
-  return (
-    <Sidebar>
+  const content = (
       <div className="min-h-screen bg-background">
         {/* Hero */}
         <header className="relative border-b border-border overflow-hidden">
@@ -712,7 +711,6 @@ const NetworkDiagnostics = () => {
 
         <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
           {activeTool ? (
-            /* ─── Active Tool View ─── */
             <div className="space-y-6">
               <Button variant="ghost" onClick={() => { setActiveTool(null); setResult(null); }} className="gap-2 text-muted-foreground hover:text-foreground -ml-2">
                 <ArrowLeft className="w-4 h-4" /> Back to All Tools
@@ -735,7 +733,6 @@ const NetworkDiagnostics = () => {
               </Card>
             </div>
           ) : (
-            /* ─── Tools Directory ─── */
             <div className="space-y-10">
               {CATEGORIES.map(cat => {
                 const meta = catMeta[cat];
@@ -778,8 +775,10 @@ const NetworkDiagnostics = () => {
           )}
         </main>
       </div>
-    </Sidebar>
   );
+
+  return <Sidebar>{content}</Sidebar>;
 };
 
 export default NetworkDiagnostics;
+export { NetworkDiagnostics };

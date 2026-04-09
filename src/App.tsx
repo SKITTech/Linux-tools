@@ -11,6 +11,7 @@ import NetworkDiagnostics from "./pages/NetworkDiagnostics";
 import IPv6Converter from "./pages/IPv6Converter";
 import FirewallGenerator from "./pages/FirewallGenerator";
 import LogAnalyzer from "./pages/LogAnalyzer";
+import NetworkTools from "./pages/NetworkTools";
 
 import CommandLibrary from "./pages/CommandLibrary";
 import DatabaseComparator from "./pages/DatabaseComparator";
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/subnet-calculator" element={<SubnetCalculator />} />
             <Route path="/network-diagnostics" element={<NetworkDiagnostics />} />
             <Route path="/ipv6-converter" element={<IPv6Converter />} />
+            <Route path="/network-tools" element={<NetworkTools />} />
             <Route path="/firewall-generator" element={<FirewallGenerator />} />
             <Route path="/log-analyzer" element={<LogAnalyzer />} />
             

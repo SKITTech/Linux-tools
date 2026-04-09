@@ -403,22 +403,29 @@ export function computeHealthScore(stats: LogStats, securityFindings: SecurityFi
 
 export function filterEntries(
   entries: ParsedLogEntry[],
-  filters: { severity?: ParsedLogEntry["severity"][]; search?: string; host?: string; service?: string; ip?: string; timeFrom?: string; timeTo?: string; }
+  filters: { severity?: ParsedLogEntry["severity"][]; search?: string; host?: string; service?: string; ip?: string; customName?: string; dateTimeFrom?: string; dateTimeTo?: string; }
 ): ParsedLogEntry[] {
   return entries.filter(e => {
     if (filters.severity?.length && !filters.severity.includes(e.severity)) return false;
     if (filters.host && e.host !== filters.host) return false;
     if (filters.service && e.service !== filters.service) return false;
     if (filters.ip && e.ip !== filters.ip) return false;
+    if (filters.customName) {
+      const term = filters.customName.toLowerCase();
+      const matchesHost = e.host?.toLowerCase().includes(term);
+      const matchesService = e.service?.toLowerCase().includes(term);
+      const matchesIp = e.ip?.toLowerCase().includes(term);
+      if (!matchesHost && !matchesService && !matchesIp) return false;
+    }
     if (filters.search) {
       const term = filters.search.toLowerCase();
       if (!e.raw.toLowerCase().includes(term)) return false;
     }
-    if (filters.timeFrom && e.timestamp) {
-      if (e.timestamp < filters.timeFrom) return false;
+    if (filters.dateTimeFrom && e.timestamp) {
+      if (e.timestamp < filters.dateTimeFrom) return false;
     }
-    if (filters.timeTo && e.timestamp) {
-      if (e.timestamp > filters.timeTo) return false;
+    if (filters.dateTimeTo && e.timestamp) {
+      if (e.timestamp > filters.dateTimeTo) return false;
     }
     return true;
   });

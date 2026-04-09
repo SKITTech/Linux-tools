@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Sidebar } from "@/components/Sidebar";
 import {
-  Activity, Network, Wifi, Globe, Shield, FileText,
+  Activity, Wifi, Shield, FileText,
   Terminal, GitCompare, ArrowRight, Sparkles,
   AlertTriangle, FileSearch,
 } from "lucide-react";
@@ -11,9 +11,7 @@ import { Card } from "@/components/ui/card";
 
 const tools = [
   { to: "/bridge-generator", icon: Activity, label: "Bridge Generator", desc: "Generate Linux bridge configs for KVM servers", color: "from-primary/20 to-primary/5" },
-  { to: "/subnet-calculator", icon: Network, label: "Subnet Calculator", desc: "Calculate subnets, CIDR, and IP ranges", color: "from-accent/20 to-accent/5" },
-  { to: "/network-diagnostics", icon: Wifi, label: "Network Diagnostics", desc: "Run diagnostic checks on network endpoints", color: "from-success/20 to-success/5" },
-  { to: "/ipv6-converter", icon: Globe, label: "IPv6 Converter", desc: "Convert between IPv4 and IPv6 formats", color: "from-primary/20 to-primary/5" },
+  { to: "/network-tools", icon: Wifi, label: "Network Tools", desc: "Diagnostics, subnet calculator & IPv6 converter", color: "from-success/20 to-success/5" },
   { to: "/firewall-generator", icon: Shield, label: "Firewall Generator", desc: "Create iptables and firewall rules", color: "from-destructive/20 to-destructive/5" },
   { to: "/log-analyzer", icon: FileText, label: "Log Analyzer", desc: "Parse and analyze system log files", color: "from-accent/20 to-accent/5" },
   

@@ -176,7 +176,7 @@ const SubnetCalculatorContent = () => {
                 <Label>CIDR / Netmask</Label>
                 <Select value={netmask} onValueChange={setNetmask}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{NETMASK_OPTIONS.map(o => <SelectItem key={o.cidr} value={String(o.cidr)}>/{o.cidr} — {o.mask}</SelectItem>)}</SelectContent>
+                  <SelectContent>{NETMASK_OPTIONS.map(o => <SelectItem key={o.cidr} value={String(o.cidr)}>/{o.cidr} — {o.value}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             </div>

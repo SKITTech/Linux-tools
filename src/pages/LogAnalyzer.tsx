@@ -14,7 +14,7 @@ import {
   FileText, Search, AlertTriangle, CheckCircle2, Download, Trash2, Upload, BarChart3,
   Activity, Shield, Eye, Filter, TrendingUp, Zap, Terminal, XCircle, Info, AlertCircle,
   Bug, ChevronDown, ChevronUp, Copy, RefreshCw, Link2, Brain, Loader2, ShieldAlert,
-  Gauge, ArrowRight, Network, Server, Globe,
+  Gauge, ArrowRight, Network, Server, Globe, Clock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Sidebar } from "@/components/Sidebar";
@@ -92,6 +92,8 @@ const LogAnalyzer = () => {
   const [severityFilter, setSeverityFilter] = useState<ParsedLogEntry["severity"][]>([]);
   const [hostFilter, setHostFilter] = useState("");
   const [serviceFilter, setServiceFilter] = useState("");
+  const [timeFrom, setTimeFrom] = useState("");
+  const [timeTo, setTimeTo] = useState("");
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
@@ -114,7 +116,9 @@ const LogAnalyzer = () => {
       search: searchTerm || undefined,
       host: hostFilter || undefined,
       service: serviceFilter || undefined,
-    }), [entries, severityFilter, searchTerm, hostFilter, serviceFilter]);
+      timeFrom: timeFrom || undefined,
+      timeTo: timeTo || undefined,
+    }), [entries, severityFilter, searchTerm, hostFilter, serviceFilter, timeFrom, timeTo]);
 
   const uniqueHosts = useMemo(() => [...new Set(entries.map(e => e.host).filter(Boolean))] as string[], [entries]);
   const uniqueServices = useMemo(() => [...new Set(entries.map(e => e.service).filter(Boolean))] as string[], [entries]);
@@ -141,6 +145,7 @@ const LogAnalyzer = () => {
     setLogInput(""); setSearchTerm(""); setSeverityFilter([]);
     setHostFilter(""); setServiceFilter(""); setExpandedRow(null);
     setActiveTab("dashboard"); setAiAnalysis(null);
+    setTimeFrom(""); setTimeTo("");
   };
 
   const runAIAnalysis = async () => {
@@ -510,9 +515,21 @@ Be specific and practical. Use markdown formatting.`;
                           </SelectContent>
                         </Select>
                       )}
-                      {(searchTerm || severityFilter.length || hostFilter || serviceFilter) && (
-                        <Button variant="ghost" size="sm" className="h-9" onClick={() => { setSearchTerm(""); setSeverityFilter([]); setHostFilter(""); setServiceFilter(""); }}>
+                      {(searchTerm || severityFilter.length || hostFilter || serviceFilter || timeFrom || timeTo) && (
+                        <Button variant="ghost" size="sm" className="h-9" onClick={() => { setSearchTerm(""); setSeverityFilter([]); setHostFilter(""); setServiceFilter(""); setTimeFrom(""); setTimeTo(""); }}>
                           <RefreshCw className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                      <Label className="text-xs text-muted-foreground">Time Range:</Label>
+                      <Input type="text" placeholder="From (e.g. 10:15)" value={timeFrom} onChange={(e) => setTimeFrom(e.target.value)} className="h-8 w-[160px] text-xs font-mono" />
+                      <span className="text-xs text-muted-foreground">→</span>
+                      <Input type="text" placeholder="To (e.g. 10:25)" value={timeTo} onChange={(e) => setTimeTo(e.target.value)} className="h-8 w-[160px] text-xs font-mono" />
+                      {(timeFrom || timeTo) && (
+                        <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => { setTimeFrom(""); setTimeTo(""); }}>
+                          <XCircle className="w-3 h-3" />
                         </Button>
                       )}
                     </div>

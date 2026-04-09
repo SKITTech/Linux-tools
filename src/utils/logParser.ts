@@ -403,7 +403,7 @@ export function computeHealthScore(stats: LogStats, securityFindings: SecurityFi
 
 export function filterEntries(
   entries: ParsedLogEntry[],
-  filters: { severity?: ParsedLogEntry["severity"][]; search?: string; host?: string; service?: string; ip?: string; }
+  filters: { severity?: ParsedLogEntry["severity"][]; search?: string; host?: string; service?: string; ip?: string; timeFrom?: string; timeTo?: string; }
 ): ParsedLogEntry[] {
   return entries.filter(e => {
     if (filters.severity?.length && !filters.severity.includes(e.severity)) return false;
@@ -413,6 +413,12 @@ export function filterEntries(
     if (filters.search) {
       const term = filters.search.toLowerCase();
       if (!e.raw.toLowerCase().includes(term)) return false;
+    }
+    if (filters.timeFrom && e.timestamp) {
+      if (e.timestamp < filters.timeFrom) return false;
+    }
+    if (filters.timeTo && e.timestamp) {
+      if (e.timestamp > filters.timeTo) return false;
     }
     return true;
   });

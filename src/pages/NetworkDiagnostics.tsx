@@ -670,6 +670,19 @@ const NetworkDiagnostics = () => {
 
   return (
     <Sidebar>
+      <NetworkDiagnosticsContent />
+    </Sidebar>
+  );
+};
+
+export const NetworkDiagnosticsInner = () => {
+  // Re-use same component but without sidebar - this is a stub, real content is below
+  return null;
+};
+
+// Content component without Sidebar wrapper - used by NetworkTools page
+const NetworkDiagnosticsContentInner = () => {
+  return (
       <div className="min-h-screen bg-background">
         {/* Hero */}
         <header className="relative border-b border-border overflow-hidden">

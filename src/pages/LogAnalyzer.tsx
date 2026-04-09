@@ -14,7 +14,7 @@ import {
   FileText, Search, AlertTriangle, CheckCircle2, Download, Trash2, Upload, BarChart3,
   Activity, Shield, Eye, Filter, TrendingUp, Zap, Terminal, XCircle, Info, AlertCircle,
   Bug, ChevronDown, ChevronUp, Copy, RefreshCw, Link2, Brain, Loader2, ShieldAlert,
-  Gauge, ArrowRight, Network, Server, Globe, Clock,
+  Gauge, ArrowRight, Network, Server, Globe, Clock, Tag,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Sidebar } from "@/components/Sidebar";
@@ -517,23 +517,31 @@ Be specific and practical. Use markdown formatting.`;
                           </SelectContent>
                         </Select>
                       )}
-                      {(searchTerm || severityFilter.length || hostFilter || serviceFilter || timeFrom || timeTo) && (
-                        <Button variant="ghost" size="sm" className="h-9" onClick={() => { setSearchTerm(""); setSeverityFilter([]); setHostFilter(""); setServiceFilter(""); setTimeFrom(""); setTimeTo(""); }}>
+                      {(searchTerm || severityFilter.length || hostFilter || serviceFilter || dateTimeFrom || dateTimeTo || customNameFilter) && (
+                        <Button variant="ghost" size="sm" className="h-9" onClick={() => { setSearchTerm(""); setSeverityFilter([]); setHostFilter(""); setServiceFilter(""); setDateTimeFrom(""); setDateTimeTo(""); setCustomNameFilter(""); }}>
                           <RefreshCw className="w-3.5 h-3.5" />
                         </Button>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                      <Label className="text-xs text-muted-foreground">Time Range:</Label>
-                      <Input type="text" placeholder="From (e.g. 10:15)" value={timeFrom} onChange={(e) => setTimeFrom(e.target.value)} className="h-8 w-[160px] text-xs font-mono" />
-                      <span className="text-xs text-muted-foreground">→</span>
-                      <Input type="text" placeholder="To (e.g. 10:25)" value={timeTo} onChange={(e) => setTimeTo(e.target.value)} className="h-8 w-[160px] text-xs font-mono" />
-                      {(timeFrom || timeTo) && (
-                        <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => { setTimeFrom(""); setTimeTo(""); }}>
-                          <XCircle className="w-3 h-3" />
-                        </Button>
-                      )}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <Tag className="w-3.5 h-3.5 text-muted-foreground" />
+                        <Label className="text-xs text-muted-foreground whitespace-nowrap">Custom Filter:</Label>
+                        <Input type="text" placeholder="Filter by name, host, IP..." value={customNameFilter} onChange={(e) => setCustomNameFilter(e.target.value)} className="h-8 w-[200px] text-xs" />
+                      </div>
+                      <div className="w-px h-6 bg-border/50 mx-1" />
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                        <Label className="text-xs text-muted-foreground whitespace-nowrap">Date & Time:</Label>
+                        <Input type="datetime-local" value={dateTimeFrom} onChange={(e) => setDateTimeFrom(e.target.value)} className="h-8 w-[190px] text-xs font-mono" />
+                        <span className="text-xs text-muted-foreground">→</span>
+                        <Input type="datetime-local" value={dateTimeTo} onChange={(e) => setDateTimeTo(e.target.value)} className="h-8 w-[190px] text-xs font-mono" />
+                        {(dateTimeFrom || dateTimeTo) && (
+                          <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => { setDateTimeFrom(""); setDateTimeTo(""); }}>
+                            <XCircle className="w-3 h-3" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {SEVERITY_OPTIONS.map(sev => {

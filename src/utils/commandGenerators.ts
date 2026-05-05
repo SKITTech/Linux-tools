@@ -449,11 +449,16 @@ const generateAlmaLinux = (config: NetworkConfig): string => {
   }
   
   // Add DNS preservation commands at the end (separated by marker)
-  const dnsServers = config.dns ? config.dns.split(',').map(d => d.trim()).filter(d => d).join(' ') : '8.8.8.8 1.1.1.1';
+  const { v4: v4DnsAll, v6: v6DnsAll } = splitDns(config.dns);
+  const dnsServersAll = (v4DnsAll.length ? v4DnsAll : ['8.8.8.8', '1.1.1.1']).join(' ');
   commands += `\n---DNS_SECTION---\n`;
   commands += `# Preserve DNS settings (run these commands to ensure DNS persists after reboot)\n`;
-  commands += `nmcli connection modify ${config.bridgeName} ipv4.dns "${dnsServers}"\n`;
+  commands += `nmcli connection modify ${config.bridgeName} ipv4.dns "${dnsServersAll}"\n`;
   commands += `nmcli connection modify ${config.bridgeName} ipv4.ignore-auto-dns yes\n`;
+  if (config.enableIPv6 && v6DnsAll.length) {
+    commands += `nmcli connection modify ${config.bridgeName} ipv6.dns "${v6DnsAll.join(' ')}"\n`;
+    commands += `nmcli connection modify ${config.bridgeName} ipv6.ignore-auto-dns yes\n`;
+  }
   
   return commands;
 };

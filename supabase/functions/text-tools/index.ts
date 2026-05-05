@@ -56,25 +56,31 @@ serve(async (req) => {
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) throw new Error("API key not configured");
 
-    // Combined enhance action - runs grammar + professional + casual in parallel
+    // Combined enhance action - single AI call returning all 3 variants for max speed
     if (action === "enhance") {
-      const grammarPrompt = `You are a professional grammar checker. Analyze the text and respond with a JSON object (no markdown, no code fences):
-{"corrected":"the corrected text","changes":[{"original":"wrong","corrected":"correct","reason":"why"}],"score":85,"summary":"brief summary"}
-Score 0-100 (100=perfect).`;
+      const enhancePrompt = `You are an expert writing assistant. Analyze the user's text and produce three deliverables in ONE JSON response (no markdown, no code fences):
+{
+  "grammar": {
+    "corrected": "the grammar/spelling-corrected text preserving original meaning and tone",
+    "changes": [{"original":"wrong phrase","corrected":"fixed phrase","reason":"short reason"}],
+    "score": 85,
+    "summary": "one short sentence about overall quality"
+  },
+  "professional": {
+    "rewritten": "polished professional rewrite suitable for business/formal contexts",
+    "improvements": ["clarity","tone","conciseness"],
+    "tip": "one actionable tip"
+  },
+  "casual": {
+    "rewritten": "natural friendly conversational rewrite",
+    "improvements": ["warmth","brevity"],
+    "tip": "one actionable tip"
+  }
+}
+Score 0-100 (100 = flawless). Keep changes array <= 8 items. Be concise.`;
 
-      const proPrompt = `You are a professional writing assistant. Rewrite the text professionally. Respond with JSON (no markdown, no code fences):
-{"rewritten":"professional version","improvements":["improvement 1"],"tip":"one tip"}`;
-
-      const casualPrompt = `You are a casual writing assistant. Rewrite the text casually and friendly. Respond with JSON (no markdown, no code fences):
-{"rewritten":"casual version","improvements":["change 1"],"tip":"one tip"}`;
-
-      const [grammar, professional, casual] = await Promise.all([
-        callAI(apiKey, grammarPrompt, text),
-        callAI(apiKey, proPrompt, text),
-        callAI(apiKey, casualPrompt, text),
-      ]);
-
-      return new Response(JSON.stringify({ grammar, professional, casual }), {
+      const parsed = await callAI(apiKey, enhancePrompt, text);
+      return new Response(JSON.stringify(parsed), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

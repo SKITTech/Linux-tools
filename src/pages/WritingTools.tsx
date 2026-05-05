@@ -35,6 +35,17 @@ const WritingTools = () => {
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
+  const [elapsed, setElapsed] = useState(0);
+  const requestIdRef = useRef(0);
+  const startedAtRef = useRef(0);
+
+  // Live elapsed counter while loading
+  useEffect(() => {
+    if (!loading) { setElapsed(0); return; }
+    startedAtRef.current = Date.now();
+    const id = setInterval(() => setElapsed((Date.now() - startedAtRef.current) / 1000), 100);
+    return () => clearInterval(id);
+  }, [loading]);
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -48,6 +59,7 @@ const WritingTools = () => {
       toast.error("Please enter some text first");
       return;
     }
+    const myId = ++requestIdRef.current;
     setLoading(true);
     setResult(null);
     try {
@@ -58,10 +70,12 @@ const WritingTools = () => {
           targetLanguage: selectedTool === "translate" ? targetLanguage : undefined,
         },
       });
+      if (myId !== requestIdRef.current) return;
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data);
     } catch (err: any) {
+      if (myId !== requestIdRef.current) return;
       if (err.message?.includes("429") || err.message?.includes("Rate limit")) {
         toast.error("Rate limit reached. Please wait a moment and try again.");
       } else if (err.message?.includes("402") || err.message?.includes("Credits")) {
@@ -70,15 +84,29 @@ const WritingTools = () => {
         toast.error(err.message || "Processing failed. Please try again.");
       }
     } finally {
-      setLoading(false);
+      if (myId === requestIdRef.current) setLoading(false);
     }
   };
+
+  // Cmd/Ctrl + Enter shortcut
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        if (!loading && inputText.trim()) handleProcess();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [loading, inputText, selectedTool, targetLanguage]);
 
   const currentTool = tools.find(t => t.id === selectedTool)!;
   const Icon = currentTool.icon;
 
-  const wordCount = inputText.trim().split(/\s+/).filter(Boolean).length;
-  const charCount = inputText.length;
+  const { wordCount, charCount } = useMemo(() => ({
+    wordCount: inputText.trim().split(/\s+/).filter(Boolean).length,
+    charCount: inputText.length,
+  }), [inputText]);
 
   const CopyBtn = ({ text, id, label }: { text: string; id: string; label?: string }) => (
     <Button

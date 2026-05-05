@@ -5,17 +5,18 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-async function callAI(apiKey: string, systemPrompt: string, userText: string) {
+async function callAI(apiKey: string, systemPrompt: string, userText: string, model = "google/gemini-2.5-flash-lite") {
   const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash-lite",
+      model,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userText }
       ],
       temperature: 0.3,
+      response_format: { type: "json_object" },
     }),
   });
 
@@ -32,9 +33,7 @@ async function callAI(apiKey: string, systemPrompt: string, userText: string) {
   const jsonStart = cleaned.search(/[\{\[]/);
   const startChar = jsonStart !== -1 ? cleaned[jsonStart] : '{';
   const jsonEnd = cleaned.lastIndexOf(startChar === '[' ? ']' : '}');
-
-  if (jsonStart === -1 || jsonEnd === -1) throw new Error("No JSON found in AI response");
-  cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+  if (jsonStart !== -1 && jsonEnd !== -1) cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
 
   try {
     return JSON.parse(cleaned);

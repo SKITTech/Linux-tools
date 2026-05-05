@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
   CheckCircle, Copy, Check, Loader2, Sparkles, Languages, FileText,
   Mail, AlignLeft, Maximize2, PenTool, ArrowRight, Lightbulb, AlertCircle,
-  Wand2, RotateCcw, Type, Zap
+  Wand2, RotateCcw, Type, Zap, X, Command
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,17 @@ const WritingTools = () => {
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
+  const [elapsed, setElapsed] = useState(0);
+  const requestIdRef = useRef(0);
+  const startedAtRef = useRef(0);
+
+  // Live elapsed counter while loading
+  useEffect(() => {
+    if (!loading) { setElapsed(0); return; }
+    startedAtRef.current = Date.now();
+    const id = setInterval(() => setElapsed((Date.now() - startedAtRef.current) / 1000), 100);
+    return () => clearInterval(id);
+  }, [loading]);
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -48,6 +59,7 @@ const WritingTools = () => {
       toast.error("Please enter some text first");
       return;
     }
+    const myId = ++requestIdRef.current;
     setLoading(true);
     setResult(null);
     try {
@@ -58,10 +70,12 @@ const WritingTools = () => {
           targetLanguage: selectedTool === "translate" ? targetLanguage : undefined,
         },
       });
+      if (myId !== requestIdRef.current) return;
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data);
     } catch (err: any) {
+      if (myId !== requestIdRef.current) return;
       if (err.message?.includes("429") || err.message?.includes("Rate limit")) {
         toast.error("Rate limit reached. Please wait a moment and try again.");
       } else if (err.message?.includes("402") || err.message?.includes("Credits")) {
@@ -70,15 +84,29 @@ const WritingTools = () => {
         toast.error(err.message || "Processing failed. Please try again.");
       }
     } finally {
-      setLoading(false);
+      if (myId === requestIdRef.current) setLoading(false);
     }
   };
+
+  // Cmd/Ctrl + Enter shortcut
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        if (!loading && inputText.trim()) handleProcess();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [loading, inputText, selectedTool, targetLanguage]);
 
   const currentTool = tools.find(t => t.id === selectedTool)!;
   const Icon = currentTool.icon;
 
-  const wordCount = inputText.trim().split(/\s+/).filter(Boolean).length;
-  const charCount = inputText.length;
+  const { wordCount, charCount } = useMemo(() => ({
+    wordCount: inputText.trim().split(/\s+/).filter(Boolean).length,
+    charCount: inputText.length,
+  }), [inputText]);
 
   const CopyBtn = ({ text, id, label }: { text: string; id: string; label?: string }) => (
     <Button
@@ -411,24 +439,33 @@ const WritingTools = () => {
                 className="min-h-[280px] bg-muted/10 border-border/50 text-sm mb-3 resize-none focus:ring-1 focus:ring-primary/20"
               />
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-muted-foreground">
-                    {charCount} chars · {wordCount} words
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {charCount.toLocaleString()} chars · {wordCount.toLocaleString()} words
                   </span>
                   {inputText.length > 0 && (
                     <button
                       onClick={() => { setInputText(""); setResult(null); }}
-                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      Clear
+                      <X className="w-3 h-3" /> Clear
                     </button>
                   )}
                 </div>
-                <Button onClick={handleProcess} disabled={loading || !inputText.trim()} className="gap-2 shadow-sm">
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                  {loading ? "Analyzing..." : "Analyze"}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <span className="hidden md:inline-flex items-center gap-1 text-[10px] text-muted-foreground/70 px-1.5 py-0.5 rounded border border-border/40 bg-muted/20">
+                    <Command className="w-2.5 h-2.5" />⏎
+                  </span>
+                  <Button
+                    onClick={handleProcess}
+                    disabled={loading || !inputText.trim()}
+                    className="gap-2 shadow-sm bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-primary"
+                  >
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                    {loading ? `Analyzing ${elapsed.toFixed(1)}s` : "Analyze"}
+                  </Button>
+                </div>
               </div>
             </Card>
 
@@ -437,11 +474,12 @@ const WritingTools = () => {
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                   <div className="relative">
-                    <div className="w-12 h-12 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
+                    <div className="w-14 h-14 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
+                    <Sparkles className="w-5 h-5 text-primary absolute inset-0 m-auto animate-pulse" />
                   </div>
-                  <p className="text-sm mt-4 font-medium">Analyzing your text...</p>
+                  <p className="text-sm mt-4 font-medium text-foreground">Working on it… <span className="text-muted-foreground tabular-nums">{elapsed.toFixed(1)}s</span></p>
                   <p className="text-xs text-muted-foreground/60 mt-1">
-                    {selectedTool === "enhance" ? "Running grammar, professional & casual analysis" : "This usually takes a few seconds"}
+                    {selectedTool === "enhance" ? "Grammar + professional + casual rewrite in one pass" : "This usually takes a few seconds"}
                   </p>
                 </div>
               ) : result ? (
@@ -451,10 +489,10 @@ const WritingTools = () => {
               ) : (
                 <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                   <div className="w-16 h-16 rounded-2xl bg-muted/20 flex items-center justify-center mb-4">
-                    <Icon className={`w-8 h-8 opacity-30 ${currentTool.color}`} />
+                    <Icon className={`w-8 h-8 opacity-40 ${currentTool.color}`} />
                   </div>
-                  <p className="text-sm font-medium">Ready to analyze</p>
-                  <p className="text-xs text-muted-foreground/60 mt-1">Enter your text and click Analyze</p>
+                  <p className="text-sm font-medium text-foreground">Ready when you are</p>
+                  <p className="text-xs text-muted-foreground/60 mt-1">Enter text and press <span className="font-mono">⌘/Ctrl + ⏎</span></p>
                 </div>
               )}
             </Card>

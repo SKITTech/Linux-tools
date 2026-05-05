@@ -1,6 +1,13 @@
 import { NetworkConfig, OSType } from "@/types/networkConfig";
 import { netmaskToCIDR } from "./configParser";
 
+const splitDns = (dns: string | undefined) => {
+  const list = (dns || '').split(',').map(d => d.trim()).filter(Boolean);
+  const v6 = list.filter(d => d.includes(':'));
+  const v4 = list.filter(d => !d.includes(':'));
+  return { v4, v6 };
+};
+
 export const generateCommands = (config: NetworkConfig): string => {
   const { os } = config;
   

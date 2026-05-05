@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
   CheckCircle, Copy, Check, Loader2, Sparkles, Languages, FileText,
   Mail, AlignLeft, Maximize2, PenTool, ArrowRight, Lightbulb, AlertCircle,
-  Wand2, RotateCcw, Type, Zap
+  Wand2, RotateCcw, Type, Zap, X, Command
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

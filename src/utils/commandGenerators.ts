@@ -1,6 +1,13 @@
 import { NetworkConfig, OSType } from "@/types/networkConfig";
 import { netmaskToCIDR } from "./configParser";
 
+const splitDns = (dns: string | undefined) => {
+  const list = (dns || '').split(',').map(d => d.trim()).filter(Boolean);
+  const v6 = list.filter(d => d.includes(':'));
+  const v4 = list.filter(d => !d.includes(':'));
+  return { v4, v6 };
+};
+
 export const generateCommands = (config: NetworkConfig): string => {
   const { os } = config;
   
@@ -356,7 +363,8 @@ const generateAlmaLinux = (config: NetworkConfig): string => {
     commands += `nmcli connection modify ${config.bridgeName} bridge.stp no\n\n`;
     
     // IPv4 configuration
-    const dnsServers = config.dns ? config.dns.split(',').map(d => d.trim()).filter(d => d).join(' ') : '8.8.8.8';
+    const { v4: v4Dns, v6: v6Dns } = splitDns(config.dns);
+    const dnsServers = (v4Dns.length ? v4Dns : ['8.8.8.8']).join(' ');
     commands += `# Configure IPv4\n`;
     commands += `nmcli connection modify ${config.bridgeName} ipv4.addresses '${config.ipAddress}/${cidr}'`;
     if (config.gateway) {
@@ -372,13 +380,13 @@ const generateAlmaLinux = (config: NetworkConfig): string => {
     
     // IPv6 configuration
     if (config.enableIPv6 && config.ipv6Address) {
-      const ipv6Dns = '2001:4860:4860::8888';
+      const ipv6DnsStr = (v6Dns.length ? v6Dns : ['2001:4860:4860::8888']).join(' ');
       commands += `# Configure IPv6\n`;
       commands += `nmcli connection modify ${config.bridgeName} ipv6.addresses '${config.ipv6Address}/${config.ipv6Prefix}'`;
       if (config.ipv6Gateway) {
         commands += ` ipv6.gateway '${config.ipv6Gateway}'`;
       }
-      commands += ` ipv6.dns '${ipv6Dns}' ipv6.method manual\n\n`;
+      commands += ` ipv6.dns '${ipv6DnsStr}' ipv6.method manual\n\n`;
     }
     
     commands += `# Add bond to bridge\n`;
@@ -398,7 +406,8 @@ const generateAlmaLinux = (config: NetworkConfig): string => {
     commands += `nmcli connection modify ${config.bridgeName} bridge.stp no\n\n`;
     
     // IPv4 configuration
-    const dnsServers = config.dns ? config.dns.split(',').map(d => d.trim()).filter(d => d).join(' ') : '8.8.8.8';
+    const { v4: v4Dns, v6: v6Dns } = splitDns(config.dns);
+    const dnsServers = (v4Dns.length ? v4Dns : ['8.8.8.8']).join(' ');
     commands += `# Configure IPv4\n`;
     commands += `nmcli connection modify ${config.bridgeName} ipv4.addresses '${config.ipAddress}/${cidr}'`;
     if (config.gateway) {
@@ -414,13 +423,13 @@ const generateAlmaLinux = (config: NetworkConfig): string => {
     
     // IPv6 configuration
     if (config.enableIPv6 && config.ipv6Address) {
-      const ipv6Dns = '2001:4860:4860::8888';
+      const ipv6DnsStr = (v6Dns.length ? v6Dns : ['2001:4860:4860::8888']).join(' ');
       commands += `# Configure IPv6\n`;
       commands += `nmcli connection modify ${config.bridgeName} ipv6.addresses '${config.ipv6Address}/${config.ipv6Prefix}'`;
       if (config.ipv6Gateway) {
         commands += ` ipv6.gateway '${config.ipv6Gateway}'`;
       }
-      commands += ` ipv6.dns '${ipv6Dns}' ipv6.method manual\n\n`;
+      commands += ` ipv6.dns '${ipv6DnsStr}' ipv6.method manual\n\n`;
     }
     
     commands += `# Add interfaces to bridge\n`;
@@ -440,11 +449,16 @@ const generateAlmaLinux = (config: NetworkConfig): string => {
   }
   
   // Add DNS preservation commands at the end (separated by marker)
-  const dnsServers = config.dns ? config.dns.split(',').map(d => d.trim()).filter(d => d).join(' ') : '8.8.8.8 1.1.1.1';
+  const { v4: v4DnsAll, v6: v6DnsAll } = splitDns(config.dns);
+  const dnsServersAll = (v4DnsAll.length ? v4DnsAll : ['8.8.8.8', '1.1.1.1']).join(' ');
   commands += `\n---DNS_SECTION---\n`;
   commands += `# Preserve DNS settings (run these commands to ensure DNS persists after reboot)\n`;
-  commands += `nmcli connection modify ${config.bridgeName} ipv4.dns "${dnsServers}"\n`;
+  commands += `nmcli connection modify ${config.bridgeName} ipv4.dns "${dnsServersAll}"\n`;
   commands += `nmcli connection modify ${config.bridgeName} ipv4.ignore-auto-dns yes\n`;
+  if (config.enableIPv6 && v6DnsAll.length) {
+    commands += `nmcli connection modify ${config.bridgeName} ipv6.dns "${v6DnsAll.join(' ')}"\n`;
+    commands += `nmcli connection modify ${config.bridgeName} ipv6.ignore-auto-dns yes\n`;
+  }
   
   return commands;
 };

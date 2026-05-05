@@ -439,24 +439,33 @@ const WritingTools = () => {
                 className="min-h-[280px] bg-muted/10 border-border/50 text-sm mb-3 resize-none focus:ring-1 focus:ring-primary/20"
               />
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-muted-foreground">
-                    {charCount} chars · {wordCount} words
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {charCount.toLocaleString()} chars · {wordCount.toLocaleString()} words
                   </span>
                   {inputText.length > 0 && (
                     <button
                       onClick={() => { setInputText(""); setResult(null); }}
-                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      Clear
+                      <X className="w-3 h-3" /> Clear
                     </button>
                   )}
                 </div>
-                <Button onClick={handleProcess} disabled={loading || !inputText.trim()} className="gap-2 shadow-sm">
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                  {loading ? "Analyzing..." : "Analyze"}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <span className="hidden md:inline-flex items-center gap-1 text-[10px] text-muted-foreground/70 px-1.5 py-0.5 rounded border border-border/40 bg-muted/20">
+                    <Command className="w-2.5 h-2.5" />⏎
+                  </span>
+                  <Button
+                    onClick={handleProcess}
+                    disabled={loading || !inputText.trim()}
+                    className="gap-2 shadow-sm bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-primary"
+                  >
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                    {loading ? `Analyzing ${elapsed.toFixed(1)}s` : "Analyze"}
+                  </Button>
+                </div>
               </div>
             </Card>
 
@@ -465,11 +474,12 @@ const WritingTools = () => {
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                   <div className="relative">
-                    <div className="w-12 h-12 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
+                    <div className="w-14 h-14 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
+                    <Sparkles className="w-5 h-5 text-primary absolute inset-0 m-auto animate-pulse" />
                   </div>
-                  <p className="text-sm mt-4 font-medium">Analyzing your text...</p>
+                  <p className="text-sm mt-4 font-medium text-foreground">Working on it… <span className="text-muted-foreground tabular-nums">{elapsed.toFixed(1)}s</span></p>
                   <p className="text-xs text-muted-foreground/60 mt-1">
-                    {selectedTool === "enhance" ? "Running grammar, professional & casual analysis" : "This usually takes a few seconds"}
+                    {selectedTool === "enhance" ? "Grammar + professional + casual rewrite in one pass" : "This usually takes a few seconds"}
                   </p>
                 </div>
               ) : result ? (
@@ -479,10 +489,10 @@ const WritingTools = () => {
               ) : (
                 <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                   <div className="w-16 h-16 rounded-2xl bg-muted/20 flex items-center justify-center mb-4">
-                    <Icon className={`w-8 h-8 opacity-30 ${currentTool.color}`} />
+                    <Icon className={`w-8 h-8 opacity-40 ${currentTool.color}`} />
                   </div>
-                  <p className="text-sm font-medium">Ready to analyze</p>
-                  <p className="text-xs text-muted-foreground/60 mt-1">Enter your text and click Analyze</p>
+                  <p className="text-sm font-medium text-foreground">Ready when you are</p>
+                  <p className="text-xs text-muted-foreground/60 mt-1">Enter text and press <span className="font-mono">⌘/Ctrl + ⏎</span></p>
                 </div>
               )}
             </Card>

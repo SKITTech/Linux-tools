@@ -72,10 +72,11 @@ const ErrorSolver = () => {
     }
   };
 
-  const copyCommand = (cmd: string) => {
-    navigator.clipboard.writeText(cmd);
-    toast({ title: "Copied", description: "Command copied to clipboard" });
+  const copyText = (text: string, label = "Copied") => {
+    navigator.clipboard.writeText(text);
+    toast({ title: label, description: "Copied to clipboard" });
   };
+  const copyCommand = (cmd: string) => copyText(cmd, "Command copied");
 
   return (
     <Sidebar>

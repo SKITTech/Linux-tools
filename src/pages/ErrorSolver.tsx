@@ -231,6 +231,29 @@ const ErrorSolver = () => {
               </Card>
             )}
 
+            {/* Customer Reply */}
+            {solution.customerReply && (
+              <Card className="border-primary/30 bg-primary/5">
+                <CardHeader className="pb-3 flex flex-row items-start justify-between space-y-0">
+                  <div>
+                    <CardTitle className="text-lg flex items-center gap-2 text-primary">
+                      <MessageSquare className="w-4 h-4" />
+                      Reply to Customer
+                    </CardTitle>
+                    <CardDescription>Ready-to-send response you can paste into the ticket</CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => copyText(solution.customerReply!, "Reply copied")}>
+                    <Copy className="w-3.5 h-3.5 mr-1.5" /> Copy
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <pre className="whitespace-pre-wrap text-sm text-foreground bg-background border border-border/50 p-4 rounded-lg font-sans leading-relaxed">
+                    {solution.customerReply}
+                  </pre>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Additional Notes */}
             {solution.additionalNotes && (
               <Card>

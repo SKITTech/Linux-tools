@@ -26,6 +26,7 @@ interface SolutionData {
   possibleCauses: string[];
   stepByStepFix: SolutionStep[];
   references: Reference[];
+  customerReply?: string;
   additionalNotes?: string;
   rawResponse?: string;
 }

@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, CheckCircle, Copy, ExternalLink, Loader2, Terminal, Search, BookOpen, Lightbulb } from "lucide-react";
+import { AlertTriangle, CheckCircle, Copy, ExternalLink, Loader2, Terminal, Search, BookOpen, Lightbulb, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -26,6 +26,7 @@ interface SolutionData {
   possibleCauses: string[];
   stepByStepFix: SolutionStep[];
   references: Reference[];
+  customerReply?: string;
   additionalNotes?: string;
   rawResponse?: string;
 }
@@ -71,10 +72,11 @@ const ErrorSolver = () => {
     }
   };
 
-  const copyCommand = (cmd: string) => {
-    navigator.clipboard.writeText(cmd);
-    toast({ title: "Copied", description: "Command copied to clipboard" });
+  const copyText = (text: string, label = "Copied") => {
+    navigator.clipboard.writeText(text);
+    toast({ title: label, description: "Copied to clipboard" });
   };
+  const copyCommand = (cmd: string) => copyText(cmd, "Command copied");
 
   return (
     <Sidebar>
@@ -225,6 +227,29 @@ const ErrorSolver = () => {
                       </div>
                     </div>
                   ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Customer Reply */}
+            {solution.customerReply && (
+              <Card className="border-primary/30 bg-primary/5">
+                <CardHeader className="pb-3 flex flex-row items-start justify-between space-y-0">
+                  <div>
+                    <CardTitle className="text-lg flex items-center gap-2 text-primary">
+                      <MessageSquare className="w-4 h-4" />
+                      Reply to Customer
+                    </CardTitle>
+                    <CardDescription>Ready-to-send response you can paste into the ticket</CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => copyText(solution.customerReply!, "Reply copied")}>
+                    <Copy className="w-3.5 h-3.5 mr-1.5" /> Copy
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <pre className="whitespace-pre-wrap text-sm text-foreground bg-background border border-border/50 p-4 rounded-lg font-sans leading-relaxed">
+                    {solution.customerReply}
+                  </pre>
                 </CardContent>
               </Card>
             )}

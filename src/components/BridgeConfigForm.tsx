@@ -127,7 +127,7 @@ export const BridgeConfigForm = () => {
     bridgeName: "viifbr0",
     interfaces: "",
     gateway: "",
-    dns: "8.8.8.8, 8.8.4.4, 2001:4860:4860::8888, 2001:4860:4860::8844",
+    dns: "8.8.8.8, 8.8.4.4",
     os: "ubuntu-18.04-hetzner",
     macAddress: "",
     enableIPv6: false,

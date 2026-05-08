@@ -5,23 +5,25 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const TRUSTED_HOSTS = new Set([
+  "virtualizor.com", "www.virtualizor.com",
+  "softaculous.com", "www.softaculous.com",
+  "webuzo.com", "www.webuzo.com",
+]);
+
 async function isUrlReachable(url: string): Promise<boolean> {
   try {
     const u = new URL(url);
     if (!/^https?:$/.test(u.protocol)) return false;
+    if (!TRUSTED_HOSTS.has(u.hostname)) return false;
     const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 5000);
-    let res: Response;
+    const t = setTimeout(() => ctrl.abort(), 2000);
     try {
-      res = await fetch(url, { method: "HEAD", redirect: "follow", signal: ctrl.signal });
-      // Some servers reject HEAD; retry with GET
-      if (res.status === 405 || res.status === 403) {
-        res = await fetch(url, { method: "GET", redirect: "follow", signal: ctrl.signal });
-      }
+      const res = await fetch(url, { method: "HEAD", redirect: "follow", signal: ctrl.signal });
+      return res.status >= 200 && res.status < 400;
     } finally {
       clearTimeout(t);
     }
-    return res.ok || (res.status >= 200 && res.status < 400);
   } catch {
     return false;
   }

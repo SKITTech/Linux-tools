@@ -19,11 +19,11 @@ serve(async (req) => {
       method: "POST",
       headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash-lite",
         messages: [
           {
             role: "system",
-            content: `You are a Linux command expert. The user will describe what they want to do. Respond with a JSON object (no markdown, no code fences) with this exact structure:
+            content: `You are a Linux command expert. The user will describe what they want to do. Respond ONLY with a JSON object (no markdown, no code fences) in this exact structure:
 {
   "command": "the main command",
   "explanation": "brief explanation of what it does",
@@ -33,11 +33,12 @@ serve(async (req) => {
   "alternatives": ["alternative command 1", "alternative command 2"],
   "caution": "any warnings or caution notes, or null if none"
 }
-Provide 3-5 practical examples. Be concise and accurate.`
+Provide 3 practical examples. Be concise and accurate.`
           },
           { role: "user", content: query }
         ],
-        temperature: 0.3,
+        temperature: 0.2,
+        response_format: { type: "json_object" },
       }),
     });
 

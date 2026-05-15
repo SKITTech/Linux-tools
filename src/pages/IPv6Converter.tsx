@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -119,6 +120,7 @@ const IPv6Converter = () => {
 
   return (
     <Sidebar>
+      <SEO title="IPv6 Converter — Expand & Compress" description="Expand, compress, and canonicalize IPv6 addresses instantly." path="/#/ipv6-converter" />
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center my-8">

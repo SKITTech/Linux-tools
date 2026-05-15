@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
+import { SEO } from "@/components/SEO";
 import {
   CheckCircle, Copy, Check, Loader2, Sparkles, Languages, FileText,
   Mail, AlignLeft, Maximize2, PenTool, ArrowRight, Lightbulb, AlertCircle,
@@ -361,6 +362,7 @@ const WritingTools = () => {
 
   return (
     <Sidebar>
+      <SEO title="Writing Tools — Grammar, Translate, Tone" description="AI grammar check, translation, and tone adjustment for writing improvements." path="/#/writing-tools" />
       <div className="min-h-screen bg-background">
         {/* Header */}
         <header className="border-b border-border/50 bg-gradient-to-br from-primary/5 via-background to-accent/5">

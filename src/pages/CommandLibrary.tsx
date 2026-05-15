@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { SEO } from "@/components/SEO";
 import { Terminal, Search, Copy, Check, Zap, Tag, ArrowRight, Loader2, Sparkles, Clock, Star, AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -687,6 +688,7 @@ const CommandLibrary = () => {
 
   return (
     <Sidebar>
+      <SEO title="Linux Command Library — Searchable Reference" description="Searchable Linux command reference with examples and AI fallback finder." path="/#/command-library" />
       <div className="min-h-screen bg-background">
         {/* Hero Header */}
         <header className="border-b border-border/50 bg-gradient-to-br from-primary/5 via-background to-accent/5">

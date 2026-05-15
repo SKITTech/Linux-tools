@@ -1,4 +1,5 @@
 import { BridgeConfigForm } from "@/components/BridgeConfigForm";
+import { SEO } from "@/components/SEO";
 import { Network, Server, Cpu, Shield, Zap } from "lucide-react";
 import { Sidebar } from "@/components/Sidebar";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 const Index = () => {
   return (
     <Sidebar>
+      <SEO title="Linux Bridge Generator — KVM/QEMU Configs" description="Generate production-ready Linux bridge configs for CentOS, AlmaLinux, and Ubuntu KVM servers." path="/#/bridge-generator" />
       <div className="min-h-screen bg-background">
         {/* Hero Header */}
         <header className="relative border-b border-border overflow-hidden">

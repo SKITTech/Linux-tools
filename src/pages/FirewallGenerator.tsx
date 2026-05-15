@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -438,6 +439,7 @@ const FirewallGenerator = () => {
 
   return (
     <Sidebar>
+      <SEO title="Firewall Rule Generator — iptables, nftables, ufw, firewalld" description="Build firewall rules with plain-English explanations and Port 22 protection." path="/#/firewall-generator" />
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
         <div className="container mx-auto px-4 py-6 max-w-6xl">
           {/* Header */}

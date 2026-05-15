@@ -1,0 +1,19 @@
+# System Admin Tools
+
+> Web-based suite of professional Linux system administration tools: bridge configuration, network diagnostics, firewall rules, log analysis, and AI-assisted error solving.
+
+## Pages
+
+- [Dashboard](/): Quick access to every tool in the suite.
+- [Bridge Generator](/#/bridge-generator): Generate Linux bridge configs for KVM/QEMU servers (CentOS, AlmaLinux, Ubuntu).
+- [Network Tools](/#/network-tools): Diagnostics, subnet calculator, and IPv6 converter in one tabbed interface.
+- [Subnet Calculator](/#/subnet-calculator): IPv4 and IPv6 CIDR calculator.
+- [Network Diagnostics](/#/network-diagnostics): Live ping, port checks, DNS lookup, and IP geolocation.
+- [IPv6 Converter](/#/ipv6-converter): Expand, compress, and convert IPv6 addresses.
+- [Firewall Generator](/#/firewall-generator): Build iptables and firewalld rules with plain-English explanations.
+- [Log Analyzer](/#/log-analyzer): Parse system logs and get AI-powered root cause analysis.
+- [Command Library](/#/command-library): Searchable Linux command reference with AI fallback.
+- [Database Comparator](/#/database-comparator): Compare SQL schemas and generate sync queries.
+- [Error Solver](/#/error-solver): AI diagnosis for Virtualizor, Softaculous, and Webuzo errors.
+- [Text Compare](/#/text-compare): Side-by-side and inline text diff.
+- [Writing Tools](/#/writing-tools): Grammar check, translation, and tone adjustment.

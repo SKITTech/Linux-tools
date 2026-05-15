@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SEO } from "@/components/SEO";
 import { Sidebar } from "@/components/Sidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -80,6 +81,7 @@ const ErrorSolver = () => {
 
   return (
     <Sidebar>
+      <SEO title="Error Solver — Virtualizor, Softaculous, Webuzo" description="AI-powered diagnosis and solutions for Virtualizor, Softaculous, and Webuzo errors." path="/#/error-solver" />
       <div className="p-6 max-w-5xl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">

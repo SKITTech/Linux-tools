@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { SEO } from "@/components/SEO";
 import { Sidebar } from "@/components/Sidebar";
 import {
   Activity, Wifi, Shield, FileText,
@@ -25,6 +26,7 @@ const tools = [
 const Dashboard = () => {
   return (
     <Sidebar>
+      <SEO title="System Admin Tools — Dashboard" description="Quick access to bridge, network, firewall, log, and AI tools for Linux sysadmins." path="/" />
       <div className="min-h-screen bg-background">
         {/* Hero */}
         <header className="border-b border-border/50 bg-gradient-to-br from-primary/5 via-background to-accent/5">

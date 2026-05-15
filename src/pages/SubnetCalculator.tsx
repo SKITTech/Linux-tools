@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -240,6 +241,7 @@ Private Address: ${result.isPrivate ? "Yes" : "No"}
 
   return (
     <Sidebar>
+      <SEO title="Subnet Calculator — IPv4 & IPv6 CIDR" description="Calculate IPv4 and IPv6 subnets, masks, ranges, and host counts from CIDR." path="/#/subnet-calculator" />
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}

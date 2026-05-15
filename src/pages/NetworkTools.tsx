@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SEO } from "@/components/SEO";
 import { Sidebar } from "@/components/Sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Wifi, Network, Globe } from "lucide-react";
@@ -13,6 +14,7 @@ const NetworkTools = () => {
 
   return (
     <Sidebar>
+      <SEO title="Network Tools — Diagnostics, Subnet, IPv6" description="All network tools in one place: diagnostics, subnet calculator, and IPv6 converter." path="/#/network-tools" />
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
         <div className="container mx-auto px-4 py-6 max-w-[1600px]">
           {/* Header */}

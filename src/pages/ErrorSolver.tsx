@@ -67,7 +67,7 @@ const ErrorSolver = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke("error-solver", {
-        body: { errorMessage: errorInput.trim(), product: selectedProduct },
+        body: { errorMessage: errorInput.trim(), product: selectedProduct, model: selectedModel },
       });
 
       if (error) throw error;

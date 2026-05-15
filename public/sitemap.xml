@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://sudoops.lovable.app/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://sudoops.lovable.app/#/bridge-generator</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://sudoops.lovable.app/#/network-tools</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://sudoops.lovable.app/#/subnet-calculator</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://sudoops.lovable.app/#/network-diagnostics</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://sudoops.lovable.app/#/ipv6-converter</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://sudoops.lovable.app/#/firewall-generator</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://sudoops.lovable.app/#/log-analyzer</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://sudoops.lovable.app/#/command-library</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://sudoops.lovable.app/#/database-comparator</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://sudoops.lovable.app/#/error-solver</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://sudoops.lovable.app/#/text-compare</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://sudoops.lovable.app/#/writing-tools</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+</urlset>

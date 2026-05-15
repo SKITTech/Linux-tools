@@ -144,19 +144,39 @@ const ErrorSolver = () => {
               }
               className="min-h-[120px] font-mono text-sm"
             />
-            <Button onClick={handleSubmit} disabled={isLoading || !errorInput.trim()} className="w-full sm:w-auto">
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Analyzing Error...
-                </>
-              ) : (
-                <>
-                  <Lightbulb className="w-4 h-4 mr-2" />
-                  Find Solution
-                </>
-              )}
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2 flex-1">
+                <Sparkles className="w-4 h-4 text-primary shrink-0" />
+                <Select value={selectedModel} onValueChange={setSelectedModel}>
+                  <SelectTrigger className="w-full sm:w-[280px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {aiModels.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{m.label}</span>
+                          <span className="text-xs text-muted-foreground">{m.description}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={handleSubmit} disabled={isLoading || !errorInput.trim()} className="w-full sm:w-auto">
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <Lightbulb className="w-4 h-4 mr-2" />
+                    Find Solution
+                  </>
+                )}
+              </Button>
+            </div>
           </CardContent>
         </Card>
 

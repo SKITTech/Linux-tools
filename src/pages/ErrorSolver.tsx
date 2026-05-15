@@ -53,6 +53,7 @@ const ErrorSolver = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [solution, setSolution] = useState<SolutionData | null>(null);
   const [selectedProduct, setSelectedProduct] = useState("virtualizor");
+  const [selectedModel, setSelectedModel] = useState("google/gemini-2.5-flash");
   const { toast } = useToast();
 
   const handleSubmit = async () => {

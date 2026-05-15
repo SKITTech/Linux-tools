@@ -108,7 +108,7 @@ Tone for customerReply: warm, professional, customer-friendly, no jargon dumps.`
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: selectedModel,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: `Diagnose this ${ctx.label} issue and provide a fix:\n\n${errorMessage}` },

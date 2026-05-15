@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SEO } from "@/components/SEO";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -777,7 +778,8 @@ const NetworkDiagnostics = () => {
       </div>
   );
 
-  return <Sidebar>{content}</Sidebar>;
+  return <Sidebar>
+      <SEO title="Network Diagnostics — Ping, Port, DNS, Geo" description="Run live network diagnostics: ping, port checks, DNS lookup, and IP geolocation." path="/#/network-diagnostics" />{content}</Sidebar>;
 };
 
 export default NetworkDiagnostics;

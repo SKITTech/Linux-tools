@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -202,6 +203,7 @@ Be specific and practical. Use markdown formatting.`;
 
   return (
     <Sidebar>
+      <SEO title="Log Analyzer — Parse Logs & AI Root Cause" description="Parse Linux system logs and get AI-powered root cause analysis with suggested fixes." path="/#/log-analyzer" />
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
         <div className="container mx-auto px-4 py-6 max-w-[1600px]">
           {/* Header */}

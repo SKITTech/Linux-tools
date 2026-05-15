@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useCallback } from "react";
+import { SEO } from "@/components/SEO";
 import { Sidebar } from "@/components/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -194,6 +195,7 @@ const TextCompare = () => {
 
   return (
     <Sidebar>
+      <SEO title="Text Compare — Side-by-Side Diff" description="Compare and diff text side-by-side or inline with word-level highlights." path="/#/text-compare" />
       <div className="min-h-screen bg-background">
         <div className="p-4 md:p-6 max-w-[1600px] mx-auto space-y-4">
           {/* Header */}

@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { SEO } from "@/components/SEO";
 import { Database, GitCompare, Copy, Check, AlertTriangle, CheckCircle, TableProperties, FileDown, Upload } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -97,6 +98,7 @@ const DatabaseComparator = () => {
 
   return (
     <Sidebar>
+      <SEO title="Database Schema Comparator — Generate Sync SQL" description="Compare SQL database schemas and generate sync queries to fix differences." path="/#/database-comparator" />
       <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3">

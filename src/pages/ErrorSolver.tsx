@@ -9,6 +9,16 @@ import { AlertTriangle, CheckCircle, Copy, ExternalLink, Loader2, Terminal, Sear
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sparkles } from "lucide-react";
+
+const aiModels = [
+  { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", description: "Fast & balanced (default)" },
+  { id: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro", description: "Deep reasoning, best quality" },
+  { id: "google/gemini-3-flash-preview", label: "Gemini 3 Flash", description: "Next-gen, fast" },
+  { id: "openai/gpt-5", label: "GPT-5", description: "OpenAI flagship, nuanced" },
+  { id: "openai/gpt-5-mini", label: "GPT-5 Mini", description: "Faster GPT-5, lower cost" },
+];
 
 interface SolutionStep {
   step: number;
@@ -43,6 +53,7 @@ const ErrorSolver = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [solution, setSolution] = useState<SolutionData | null>(null);
   const [selectedProduct, setSelectedProduct] = useState("virtualizor");
+  const [selectedModel, setSelectedModel] = useState("google/gemini-2.5-flash");
   const { toast } = useToast();
 
   const handleSubmit = async () => {
@@ -56,7 +67,7 @@ const ErrorSolver = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke("error-solver", {
-        body: { errorMessage: errorInput.trim(), product: selectedProduct },
+        body: { errorMessage: errorInput.trim(), product: selectedProduct, model: selectedModel },
       });
 
       if (error) throw error;
@@ -133,19 +144,39 @@ const ErrorSolver = () => {
               }
               className="min-h-[120px] font-mono text-sm"
             />
-            <Button onClick={handleSubmit} disabled={isLoading || !errorInput.trim()} className="w-full sm:w-auto">
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Analyzing Error...
-                </>
-              ) : (
-                <>
-                  <Lightbulb className="w-4 h-4 mr-2" />
-                  Find Solution
-                </>
-              )}
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2 flex-1">
+                <Sparkles className="w-4 h-4 text-primary shrink-0" />
+                <Select value={selectedModel} onValueChange={setSelectedModel}>
+                  <SelectTrigger className="w-full sm:w-[280px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {aiModels.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{m.label}</span>
+                          <span className="text-xs text-muted-foreground">{m.description}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={handleSubmit} disabled={isLoading || !errorInput.trim()} className="w-full sm:w-auto">
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <Lightbulb className="w-4 h-4 mr-2" />
+                    Find Solution
+                  </>
+                )}
+              </Button>
+            </div>
           </CardContent>
         </Card>
 

@@ -33,12 +33,23 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { errorMessage, product } = await req.json();
+    const { errorMessage, product, model } = await req.json();
     if (!errorMessage) {
       return new Response(JSON.stringify({ error: "Error message is required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const ALLOWED_MODELS = new Set([
+      "google/gemini-2.5-flash",
+      "google/gemini-2.5-flash-lite",
+      "google/gemini-2.5-pro",
+      "google/gemini-3-flash-preview",
+      "openai/gpt-5",
+      "openai/gpt-5-mini",
+      "openai/gpt-5-nano",
+    ]);
+    const selectedModel = ALLOWED_MODELS.has(model) ? model : "google/gemini-2.5-flash";
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
@@ -97,7 +108,7 @@ Tone for customerReply: warm, professional, customer-friendly, no jargon dumps.`
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: selectedModel,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: `Diagnose this ${ctx.label} issue and provide a fix:\n\n${errorMessage}` },

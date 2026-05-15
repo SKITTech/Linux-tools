@@ -9,6 +9,16 @@ import { AlertTriangle, CheckCircle, Copy, ExternalLink, Loader2, Terminal, Sear
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sparkles } from "lucide-react";
+
+const aiModels = [
+  { id: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash", description: "Fast & balanced (default)" },
+  { id: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro", description: "Deep reasoning, best quality" },
+  { id: "google/gemini-3-flash-preview", label: "Gemini 3 Flash", description: "Next-gen, fast" },
+  { id: "openai/gpt-5", label: "GPT-5", description: "OpenAI flagship, nuanced" },
+  { id: "openai/gpt-5-mini", label: "GPT-5 Mini", description: "Faster GPT-5, lower cost" },
+];
 
 interface SolutionStep {
   step: number;

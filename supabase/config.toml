@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.error-solver]
 verify_jwt = false
+
+[functions.docker-ask]
+verify_jwt = false

@@ -12,6 +12,7 @@ import IPv6Converter from "./pages/IPv6Converter";
 import FirewallGenerator from "./pages/FirewallGenerator";
 import LogAnalyzer from "./pages/LogAnalyzer";
 import NetworkTools from "./pages/NetworkTools";
+import Docker from "./pages/Docker";
 
 import CommandLibrary from "./pages/CommandLibrary";
 import DatabaseComparator from "./pages/DatabaseComparator";
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/error-solver" element={<ErrorSolver />} />
             <Route path="/text-compare" element={<TextCompare />} />
             <Route path="/writing-tools" element={<WritingTools />} />
+            <Route path="/docker" element={<Docker />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

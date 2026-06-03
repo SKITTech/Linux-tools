@@ -67,18 +67,21 @@ export function runCommand(rawInput: string, state: SandboxState): RunResult {
   const input = rawInput.trim();
   if (!input) return { output: "", exitCode: 0, state };
 
-  if (input === "help" || input === "--help") {
+  if (input === "help" || input === "--help" || input === "docker" || input === "docker --help" || input === "docker -h") {
     return {
       output:
         "Sandbox supports a subset of docker commands:\n" +
-        "  docker ps [-a]\n  docker images\n  docker pull <image>\n  docker run [-d] [--name N] [-p H:C] <image> [cmd]\n" +
-        "  docker stop|start|rm <name>\n  docker logs <name>\n  docker exec -it <name> sh\n  docker volume ls|create|inspect\n" +
-        "  docker network ls|create|inspect\n  docker build -t <tag> .\n  docker compose up|down|ps|logs\n  clear, reset\n",
+        "  docker ps [-a]\n  docker images | docker image ls\n  docker image rm|rmi <ref>\n  docker pull <image>\n  docker run [-d] [--name N] [-p H:C] <image> [cmd]\n" +
+        "  docker container run|ls|rm|stop|start|logs|exec ...\n" +
+        "  docker stop|start|rm <name>\n  docker logs <name>\n  docker exec -it <name> sh\n  docker volume ls|create|inspect|rm\n" +
+        "  docker network ls|create|inspect|rm\n  docker build -t <tag> .\n  docker compose up|down|ps|logs\n  clear, reset\n",
       exitCode: 0, state,
     };
   }
   if (input === "clear") return { output: "__CLEAR__", exitCode: 0, state };
   if (input === "reset") return { output: "Sandbox reset.", exitCode: 0, state: structuredClone(DEFAULT_STATE) };
+
+
 
   if (!ALLOWED_HEAD.test(input)) {
     return { output: `sandbox: "${input.split(/\s+/)[0]}": command not allowed. Only \`docker\` and \`docker compose\` work here. Type 'help'.`, exitCode: 127, state };

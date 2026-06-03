@@ -8,3 +8,7 @@ verify_jwt = false
 
 [functions.docker-ask]
 verify_jwt = false
+
+[functions.git-ask]
+verify_jwt = false
+

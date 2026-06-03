@@ -13,6 +13,7 @@ import FirewallGenerator from "./pages/FirewallGenerator";
 import LogAnalyzer from "./pages/LogAnalyzer";
 import NetworkTools from "./pages/NetworkTools";
 import Docker from "./pages/Docker";
+import Git from "./pages/Git";
 
 import CommandLibrary from "./pages/CommandLibrary";
 import DatabaseComparator from "./pages/DatabaseComparator";
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/text-compare" element={<TextCompare />} />
             <Route path="/writing-tools" element={<WritingTools />} />
             <Route path="/docker" element={<Docker />} />
+            <Route path="/git" element={<Git />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -89,7 +89,19 @@ export function runCommand(rawInput: string, state: SandboxState): RunResult {
 
   const parts = input.split(/\s+/);
   // parts[0]="docker"
-  const sub = parts[1];
+  let sub = parts[1];
+
+  // docker --help / -h
+  if (sub === "--help" || sub === "-h") return runCommand("help", state);
+
+  // docker container <subcmd> ...  →  rewrite to docker <subcmd> ...
+  if (sub === "container") {
+    const rest = parts.slice(2);
+    if (rest.length === 0) return { output: "Usage: docker container COMMAND (ls|run|rm|stop|start|logs|exec|inspect)", exitCode: 0, state };
+    const map: Record<string, string> = { ls: "ps" };
+    const head = map[rest[0]] || rest[0];
+    return runCommand(`docker ${head} ${rest.slice(1).join(" ")}`.trim(), state);
+  }
 
   // docker compose ...
   if (sub === "compose") {
@@ -110,17 +122,43 @@ export function runCommand(rawInput: string, state: SandboxState): RunResult {
       const rows = list.map((c) => [c.id.slice(0, 12), c.image, "\"/entrypoint\"", c.created, c.status === "running" ? "Up 5 minutes" : "Exited (0) 1 minute ago", c.ports || "", c.name]);
       return { output: table(["CONTAINER ID", "IMAGE", "COMMAND", "CREATED", "STATUS", "PORTS", "NAMES"], rows), exitCode: 0, state };
     }
+    case "rmi": {
+      // alias: docker rmi <ref> → docker image rm <ref>
+      return runCommand(`docker image rm ${parts.slice(2).join(" ")}`.trim(), state);
+    }
     case "images":
     case "image": {
-      if (sub === "image" && parts[2] !== "ls") {
-        if (parts[2] === "prune") {
-          return { output: "Total reclaimed space: 0B (sandbox)", exitCode: 0, state };
-        }
-        return { output: "Usage: docker image ls", exitCode: 0, state };
+      const action = sub === "images" ? "ls" : parts[2];
+      if (action === "ls" || sub === "images") {
+        const rows = state.images.map((i) => [i.repo, i.tag, i.id.slice(0, 12), i.created, i.size]);
+        return { output: table(["REPOSITORY", "TAG", "IMAGE ID", "CREATED", "SIZE"], rows), exitCode: 0, state };
       }
-      const rows = state.images.map((i) => [i.repo, i.tag, i.id.slice(0, 12), i.created, i.size]);
-      return { output: table(["REPOSITORY", "TAG", "IMAGE ID", "CREATED", "SIZE"], rows), exitCode: 0, state };
+      if (action === "prune") {
+        return { output: "Total reclaimed space: 0B (sandbox)", exitCode: 0, state };
+      }
+      if (action === "rm" || action === "rmi") {
+        const refs = parts.slice(3).filter((p) => !p.startsWith("-"));
+        if (refs.length === 0) return { output: '"image rm" requires at least 1 argument.', exitCode: 1, state };
+        const ns = { ...state, images: [...state.images] };
+        const removed: string[] = [];
+        for (const ref of refs) {
+          const idx = ns.images.findIndex((i) => i.id.startsWith(ref) || `${i.repo}:${i.tag}` === ref || i.repo === ref);
+          if (idx === -1) return { output: `Error: No such image: ${ref}`, exitCode: 1, state };
+          removed.push(`Untagged: ${ns.images[idx].repo}:${ns.images[idx].tag}\nDeleted: sha256:${ns.images[idx].id}`);
+          ns.images.splice(idx, 1);
+        }
+        return { output: removed.join("\n"), exitCode: 0, state: ns };
+      }
+      if (action === "pull") return runCommand(`docker pull ${parts.slice(3).join(" ")}`, state);
+      if (action === "inspect") {
+        const ref = parts[3];
+        const img = state.images.find((i) => i.id.startsWith(ref) || `${i.repo}:${i.tag}` === ref || i.repo === ref);
+        if (!img) return { output: `Error: No such image: ${ref}`, exitCode: 1, state };
+        return { output: JSON.stringify([{ Id: `sha256:${img.id}`, RepoTags: [`${img.repo}:${img.tag}`], Size: img.size }], null, 2), exitCode: 0, state };
+      }
+      return { output: "Usage: docker image ls|rm|prune|inspect|pull", exitCode: 0, state };
     }
+
     case "pull": {
       const ref = parts[2];
       if (!ref) return { output: 'See "docker pull --help".', exitCode: 1, state };

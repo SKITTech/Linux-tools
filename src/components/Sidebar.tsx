@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LucideIcon, Menu, Activity, Network, Wifi, Globe, Shield, FileText, Terminal, GitCompare, ChevronLeft, Server, LayoutDashboard, Sun, Moon, Search, X, AlertTriangle, FileSearch, Sparkles, Container } from "lucide-react";
+import { LucideIcon, Menu, Activity, Network, Wifi, Globe, Shield, FileText, Terminal, GitCompare, ChevronLeft, Server, LayoutDashboard, Sun, Moon, Search, X, AlertTriangle, FileSearch, Sparkles, Container, GitBranch } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/ThemeProvider";
 
@@ -25,6 +25,7 @@ const navItems: SidebarItem[] = [
   { to: "/text-compare", icon: FileSearch, label: "Text Compare" },
   { to: "/writing-tools", icon: Sparkles, label: "Writing Tools" },
   { to: "/docker", icon: Container, label: "Docker" },
+  { to: "/git", icon: GitBranch, label: "Git" },
 ];
 
 interface SidebarProps {

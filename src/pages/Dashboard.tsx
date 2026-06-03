@@ -4,7 +4,7 @@ import { Sidebar } from "@/components/Sidebar";
 import {
   Activity, Wifi, Shield, FileText,
   Terminal, GitCompare, ArrowRight, Sparkles,
-  AlertTriangle, FileSearch, Container,
+  AlertTriangle, FileSearch, Container, GitBranch,
 } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
@@ -22,6 +22,7 @@ const tools = [
   { to: "/text-compare", icon: FileSearch, label: "Text Compare", desc: "Compare and diff text side by side", color: "from-accent/20 to-accent/5" },
   { to: "/writing-tools", icon: Sparkles, label: "Writing Tools", desc: "Grammar check, translator, tone adjustment & more", color: "from-primary/20 to-primary/5" },
   { to: "/docker", icon: Container, label: "Docker", desc: "Ask, learn, practise in a safe sandbox + quiz", color: "from-primary/20 to-primary/5" },
+  { to: "/git", icon: GitBranch, label: "Git", desc: "Ask, learn, practise Git in a safe sandbox + quiz", color: "from-success/20 to-success/5" },
 ];
 
 const Dashboard = () => {

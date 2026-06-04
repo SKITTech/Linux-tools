@@ -1,20 +1,26 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Copy, Send, AlertTriangle, Sparkles } from "lucide-react";
+import { Copy, Send, AlertTriangle, Sparkles, Search, X, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { AskMode, ChatMessage } from "./types";
+
+const TOPICS = [
+  "Dockerfile", "Compose", "Networking", "Volumes", "BuildKit",
+  "Multi-stage", "Healthchecks", "Secrets", "Debugging", "Security", "Registry", "Swarm",
+];
 
 const TEMPLATES = [
   { label: "Dockerfile help", text: "Help me write a production-ready Dockerfile for a Node 20 TypeScript API." },
   { label: "Compose help", text: "Show me a docker compose.yaml for a Node API + Postgres with healthchecks." },
   { label: "Networking", text: "Explain Docker user-defined bridge networks and container DNS with examples." },
   { label: "Volumes", text: "Named volumes vs bind mounts — when to use which? Show commands." },
-  { label: "Debugging", text: "My container exits with code 137. How do I debug it?" },
+  { label: "Debug exit 137", text: "My container exits with code 137. How do I debug it?" },
 ];
 
 const STORAGE_KEY = "docker.ask.history.v1";
@@ -62,32 +68,71 @@ export default function Ask() {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); } catch { return []; }
   });
   const [input, setInput] = useState("");
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const taRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)); }, [messages]);
   useEffect(() => { localStorage.setItem(MODE_KEY, mode); }, [mode]);
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }); }, [messages, loading]);
+  useEffect(() => { taRef.current?.focus(); }, []);
+
+  const visible = useMemo(() => {
+    if (!search.trim()) return messages;
+    const s = search.toLowerCase();
+    return messages.filter((m) => m.content.toLowerCase().includes(s));
+  }, [messages, search]);
+
+  async function ask(question: string, history: ChatMessage[]) {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("docker-ask", {
+        body: { question, mode, history: history.slice(-10).map(({ role, content }) => ({ role, content })) },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return (data?.answer as string) || "(no response)";
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function send(question: string) {
     const q = question.trim();
     if (!q || loading) return;
     const userMsg: ChatMessage = { id: crypto.randomUUID(), role: "user", content: q, createdAt: Date.now() };
     const next = [...messages, userMsg];
-    setMessages(next); setInput(""); setLoading(true);
+    setMessages(next); setInput("");
     try {
-      const { data, error } = await supabase.functions.invoke("docker-ask", {
-        body: { question: q, mode, history: next.slice(-10).map(({ role, content }) => ({ role, content })) },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      const answer: string = data?.answer || "(no response)";
+      const answer = await ask(q, next);
       setMessages((m) => [...m, { id: crypto.randomUUID(), role: "assistant", content: answer, createdAt: Date.now() }]);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to ask");
     } finally {
-      setLoading(false);
+      setTimeout(() => taRef.current?.focus(), 0);
     }
+  }
+
+  async function regenerate() {
+    // remove trailing assistant message(s) and re-ask the last user message
+    let trimmed = [...messages];
+    while (trimmed.length && trimmed[trimmed.length - 1].role === "assistant") trimmed.pop();
+    const last = trimmed[trimmed.length - 1];
+    if (!last || last.role !== "user") { toast.error("Nothing to regenerate"); return; }
+    setMessages(trimmed);
+    try {
+      const answer = await ask(last.content, trimmed);
+      setMessages((m) => [...m, { id: crypto.randomUUID(), role: "assistant", content: answer, createdAt: Date.now() }]);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to regenerate");
+    }
+  }
+
+  function deleteFrom(id: string) {
+    const idx = messages.findIndex((m) => m.id === id);
+    if (idx === -1) return;
+    setMessages(messages.slice(0, idx));
   }
 
   return (
@@ -101,34 +146,66 @@ export default function Ask() {
           <span className="text-muted-foreground">Mode:</span>
           <Button size="sm" variant={mode === "beginner" ? "default" : "outline"} onClick={() => setMode("beginner")}>Beginner</Button>
           <Button size="sm" variant={mode === "advanced" ? "default" : "outline"} onClick={() => setMode("advanced")}>Advanced</Button>
+          {messages.some((m) => m.role === "assistant") && (
+            <Button size="sm" variant="outline" onClick={regenerate} disabled={loading}>
+              <RefreshCw className="w-3.5 h-3.5 mr-1" />Regenerate
+            </Button>
+          )}
           {messages.length > 0 && (
             <Button size="sm" variant="ghost" onClick={() => setMessages([])}>Clear</Button>
           )}
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-3">
+      <div className="flex flex-wrap gap-2 mb-2">
         {TEMPLATES.map((t) => (
           <Button key={t.label} size="sm" variant="outline" className="h-7 text-xs rounded-full" onClick={() => send(t.text)} disabled={loading}>
             {t.label}
           </Button>
         ))}
       </div>
+      <div className="flex flex-wrap gap-1.5 mb-3">
+        {TOPICS.map((t) => (
+          <Badge key={t} variant="secondary" className="cursor-pointer hover:bg-primary/20 text-[11px]" onClick={() => send(`Explain Docker ${t} with practical examples and the most common commands.`)}>
+            {t}
+          </Badge>
+        ))}
+      </div>
+
+      {messages.length > 3 && (
+        <div className="relative mb-2">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search history…" className="h-8 pl-7 pr-7 text-xs" />
+          {search && <button onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2"><X className="w-3 h-3 text-muted-foreground" /></button>}
+        </div>
+      )}
 
       <Card className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
           <div ref={scrollRef} className="p-4 space-y-4">
-            {messages.length === 0 && (
+            {visible.length === 0 && (
               <div className="text-center text-sm text-muted-foreground py-12">
-                Ask any Docker question. Try a chip above to get started.
+                Ask any Docker question. Tap a chip above to get started.
               </div>
             )}
-            {messages.map((m) => (
-              <div key={m.id} className={m.role === "user" ? "flex justify-end" : ""}>
+            {visible.map((m) => (
+              <div key={m.id} className={m.role === "user" ? "flex justify-end group" : "group"}>
                 {m.role === "user" ? (
-                  <div className="max-w-[80%] rounded-2xl bg-primary text-primary-foreground px-4 py-2 text-sm whitespace-pre-wrap">{m.content}</div>
+                  <div className="max-w-[80%] rounded-2xl bg-primary text-primary-foreground px-4 py-2 text-sm whitespace-pre-wrap relative">
+                    {m.content}
+                    <button onClick={() => deleteFrom(m.id)} title="Delete from here" className="absolute -left-7 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 ) : (
-                  <div className="max-w-[90%]">{renderMarkdown(m.content)}</div>
+                  <div className="max-w-[90%]">
+                    {renderMarkdown(m.content)}
+                    <div className="mt-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button size="sm" variant="ghost" className="h-6 px-2 text-[11px]" onClick={() => { navigator.clipboard.writeText(m.content); toast.success("Answer copied"); }}>
+                        <Copy className="w-3 h-3 mr-1" />Copy answer
+                      </Button>
+                    </div>
+                  </div>
                 )}
               </div>
             ))}
@@ -139,11 +216,17 @@ export default function Ask() {
 
       <div className="mt-3 flex gap-2 items-end">
         <Textarea
+          ref={taRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask anything Docker — Dockerfile, compose, networking, errors…"
+          placeholder="Ask anything Docker — Enter to send, Shift+Enter for newline"
           className="min-h-[60px] resize-none font-mono text-sm"
-          onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); send(input); } }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+              e.preventDefault();
+              send(input);
+            }
+          }}
         />
         <Button onClick={() => send(input)} disabled={loading || !input.trim()} className="h-[60px] px-5">
           <Send className="w-4 h-4 mr-2" />Ask

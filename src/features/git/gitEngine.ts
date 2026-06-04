@@ -138,17 +138,59 @@ function pushReflog(s: RepoState, msg: string) {
   s.reflog = s.reflog.slice(0, 100);
 }
 
+function runBuiltin(tokens: string[], s: RepoState): RunResult {
+  const [cmd, ...rest] = tokens;
+  if (cmd === "ls") {
+    if (s.files.length === 0) return ok("(empty working tree)", s);
+    const out = s.files.map((f) => {
+      const flags: string[] = [];
+      if (!f.tracked) flags.push("?");
+      if (f.staged) flags.push("staged");
+      if (f.modified) flags.push("modified");
+      return `${f.path}${flags.length ? "  [" + flags.join(",") + "]" : ""}`;
+    });
+    return ok(out.join("\n"), s);
+  }
+  if (cmd === "cat") {
+    const f = s.files.find((x) => x.path === rest[0]);
+    if (!f) return err(`cat: ${rest[0] || "(no file)"}: not found`, s);
+    return ok(f.content || "(empty)", s);
+  }
+  if (cmd === "touch") {
+    const p = rest[0]; if (!p) return err("touch: usage: touch <file>", s);
+    if (!s.files.find((f) => f.path === p)) s.files.push({ path: p, content: "", tracked: false, staged: false, modified: false });
+    return ok("", s);
+  }
+  if (cmd === "edit" || cmd === "write") {
+    const p = rest[0]; if (!p) return err(`${cmd}: usage: ${cmd} <file> <content...>`, s);
+    const content = rest.slice(1).join(" ");
+    let f = s.files.find((x) => x.path === p);
+    if (!f) { f = { path: p, content, tracked: false, staged: false, modified: true }; s.files.push(f); }
+    else { f.content = content; if (f.tracked) f.modified = true; }
+    return ok(`wrote ${content.length} bytes to ${p}`, s);
+  }
+  if (cmd === "rm-file") {
+    const p = rest[0]; const before = s.files.length;
+    s.files = s.files.filter((f) => f.path !== p);
+    return s.files.length === before ? err(`rm-file: ${p}: not found`, s) : ok(`removed ${p} from sandbox FS (use 'git rm' for tracked removals)`, s);
+  }
+  return err(`builtin '${cmd}' not implemented`, s);
+}
+
 export function runGit(rawInput: string, prev: RepoState, opts: RunOpts): RunResult {
   const input = rawInput.trim();
   if (!input) return { output: "", exitCode: 0, state: prev };
 
   if (input === "help" || input === "--help" || input === "git" || input === "git --help") {
     return ok(
-`Sandbox supports a safe subset of git:
-  Read-only:  status, log, diff, show, branch, tag, remote, reflog, config, rev-parse, ls-files
+`Sandbox supports a safe subset of git PLUS a few file builtins:
+  Read-only:  status [-s], log [--oneline|--graph], diff, show, branch, tag,
+              remote, reflog, config, rev-parse, ls-files
   Write:      init, add, rm, commit, switch/checkout/restore, merge, rebase,
               cherry-pick, revert, reset, clean, push, pull, fetch, stash,
               tag, remote, bisect, worktree, submodule, sparse-checkout
+  File ops:   ls, cat <file>, touch <file>, write <file> <content...>,
+              edit <file> <content...>, rm-file <file>
   Builtin:    help, clear, reset-sandbox, load-sample, load-conflict
 Destructive ops (reset --hard, clean -fd, push --force, rebase, filter-*, branch -D)
 require the "I understand" checkbox above.`, prev);
@@ -158,14 +200,22 @@ require the "I understand" checkbox above.`, prev);
   if (input === "load-sample") return ok("Loaded sample repo: 4 commits, 2 branches, tag v0.1.0, remote origin.", structuredClone(SAMPLE_STATE));
   if (input === "load-conflict") return ok("Loaded conflict exercise: src/conflict.ts has unresolved markers. Edit and `git add` + `git commit`.", structuredClone(CONFLICT_STATE));
 
+  const t0 = input.split(/\s+/);
+  if (["ls", "cat", "touch", "edit", "write", "rm-file"].includes(t0[0])) {
+    if (opts.readOnly && ["touch", "edit", "write", "rm-file"].includes(t0[0])) {
+      return err(`Read-only mode: '${t0[0]}' is blocked.`, prev);
+    }
+    return runBuiltin(t0, structuredClone(prev));
+  }
+
   // Allowlist + token parse — never shell, never eval.
   const tokens = input.split(/\s+/);
   if (tokens[0] !== "git") {
-    return err(`sandbox: "${tokens[0]}": command not allowed. Only \`git\` works here. Type 'help'.`, prev);
+    return err(`sandbox: "${tokens[0]}": command not allowed. Type 'help' for the list.`, prev);
   }
   const cmd = tokens[1];
   if (!cmd) return err("Usage: git COMMAND. Try 'git --help'.", prev);
-  if (!allowed(cmd)) return err(`sandbox: 'git ${cmd}' is not in the allowlist.`, prev);
+  if (!allowed(cmd)) return err(`sandbox: 'git ${cmd}' is not in the allowlist. Type 'help'.`, prev);
 
   if (opts.readOnly && !READ_ONLY.has(cmd)) {
     return err(`Read-only mode: 'git ${cmd}' is blocked. Disable read-only to run writes.`, prev);
@@ -187,16 +237,26 @@ Tick "I understand" above before running it. Recovery hint: 'git reflog' + 'git 
     case "status": {
       if (!s.initialized) return err("fatal: not a git repository.", s);
       const br = currentBranch(s);
-      const lines: string[] = [`On branch ${br?.name ?? `(HEAD detached at ${s.head.slice(9)})`}`];
+      const short = rest.includes("-s") || rest.includes("--short");
       const staged = s.files.filter((f) => f.staged);
       const modified = s.files.filter((f) => f.tracked && f.modified && !f.staged);
       const untracked = s.files.filter((f) => !f.tracked);
+      if (short) {
+        const lines = [
+          ...staged.map((f) => `${f.tracked ? "M" : "A"}  ${f.path}`),
+          ...modified.map((f) => ` M ${f.path}`),
+          ...untracked.map((f) => `?? ${f.path}`),
+        ];
+        return ok(lines.join("\n") || "", s);
+      }
+      const lines: string[] = [`On branch ${br?.name ?? `(HEAD detached at ${s.head.slice(9)})`}`];
       if (staged.length) { lines.push("", "Changes to be committed:"); staged.forEach((f) => lines.push(`  ${f.tracked ? "modified" : "new file"}:  ${f.path}`)); }
       if (modified.length) { lines.push("", "Changes not staged for commit:"); modified.forEach((f) => lines.push(`  modified:  ${f.path}`)); }
       if (untracked.length) { lines.push("", "Untracked files:"); untracked.forEach((f) => lines.push(`  ${f.path}`)); }
       if (!staged.length && !modified.length && !untracked.length) lines.push("nothing to commit, working tree clean");
       return ok(lines.join("\n"), s);
     }
+
     case "add": {
       const targets = rest.filter((t) => !t.startsWith("-"));
       if (targets.length === 0) return err("Nothing specified, nothing added.", s);
@@ -238,15 +298,18 @@ Tick "I understand" above before running it. Recovery hint: 'git reflog' + 'git 
     case "log": {
       if (!s.initialized) return err("fatal: not a git repository.", s);
       const oneline = rest.includes("--oneline");
+      const graph = rest.includes("--graph");
       let cur = headSha(s); const out: string[] = []; let n = 0;
       while (cur && n < 30) {
         const c = s.commits.find((x) => x.sha === cur); if (!c) break;
-        if (oneline) out.push(`${c.sha} ${c.msg}`);
+        const prefix = graph ? "* " : "";
+        if (oneline || graph) out.push(`${prefix}${c.sha} ${c.msg}`);
         else out.push(`commit ${c.sha}\nAuthor: ${c.author}\n\n    ${c.msg}\n`);
         cur = c.parent; n++;
       }
-      return ok(out.join(oneline ? "\n" : "\n"), s);
+      return ok(out.join("\n"), s);
     }
+
     case "diff": {
       const staged = rest.includes("--staged") || rest.includes("--cached");
       const pool = s.files.filter((f) => (staged ? f.staged : f.modified && !f.staged));
@@ -297,12 +360,13 @@ Tick "I understand" above before running it. Recovery hint: 'git reflog' + 'git 
         return ok(`Switched to a new branch '${name}'`, s);
       }
       const name = rest.find((t) => !t.startsWith("-"));
-      if (!name) return err("usage: git switch <branch>", s);
+      if (!name) return err("usage: git switch <branch>  (use -c to create)", s);
       const b = s.branches.find((x) => x.name === name);
-      if (!b) return err(`fatal: invalid reference: ${name}`, s);
+      if (!b) return err(`fatal: invalid reference: ${name}\nhint: did you mean 'git switch -c ${name}' to create it?`, s);
       s.head = b.name; pushReflog(s, `checkout: switching to ${name}`);
       return ok(`Switched to branch '${name}'`, s);
     }
+
     case "restore": {
       const staged = rest.includes("--staged");
       const target = rest.filter((t) => !t.startsWith("-"));

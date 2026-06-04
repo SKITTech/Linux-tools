@@ -298,15 +298,18 @@ Tick "I understand" above before running it. Recovery hint: 'git reflog' + 'git 
     case "log": {
       if (!s.initialized) return err("fatal: not a git repository.", s);
       const oneline = rest.includes("--oneline");
+      const graph = rest.includes("--graph");
       let cur = headSha(s); const out: string[] = []; let n = 0;
       while (cur && n < 30) {
         const c = s.commits.find((x) => x.sha === cur); if (!c) break;
-        if (oneline) out.push(`${c.sha} ${c.msg}`);
+        const prefix = graph ? "* " : "";
+        if (oneline || graph) out.push(`${prefix}${c.sha} ${c.msg}`);
         else out.push(`commit ${c.sha}\nAuthor: ${c.author}\n\n    ${c.msg}\n`);
         cur = c.parent; n++;
       }
-      return ok(out.join(oneline ? "\n" : "\n"), s);
+      return ok(out.join("\n"), s);
     }
+
     case "diff": {
       const staged = rest.includes("--staged") || rest.includes("--cached");
       const pool = s.files.filter((f) => (staged ? f.staged : f.modified && !f.staged));

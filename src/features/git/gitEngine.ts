@@ -237,16 +237,26 @@ Tick "I understand" above before running it. Recovery hint: 'git reflog' + 'git 
     case "status": {
       if (!s.initialized) return err("fatal: not a git repository.", s);
       const br = currentBranch(s);
-      const lines: string[] = [`On branch ${br?.name ?? `(HEAD detached at ${s.head.slice(9)})`}`];
+      const short = rest.includes("-s") || rest.includes("--short");
       const staged = s.files.filter((f) => f.staged);
       const modified = s.files.filter((f) => f.tracked && f.modified && !f.staged);
       const untracked = s.files.filter((f) => !f.tracked);
+      if (short) {
+        const lines = [
+          ...staged.map((f) => `${f.tracked ? "M" : "A"}  ${f.path}`),
+          ...modified.map((f) => ` M ${f.path}`),
+          ...untracked.map((f) => `?? ${f.path}`),
+        ];
+        return ok(lines.join("\n") || "", s);
+      }
+      const lines: string[] = [`On branch ${br?.name ?? `(HEAD detached at ${s.head.slice(9)})`}`];
       if (staged.length) { lines.push("", "Changes to be committed:"); staged.forEach((f) => lines.push(`  ${f.tracked ? "modified" : "new file"}:  ${f.path}`)); }
       if (modified.length) { lines.push("", "Changes not staged for commit:"); modified.forEach((f) => lines.push(`  modified:  ${f.path}`)); }
       if (untracked.length) { lines.push("", "Untracked files:"); untracked.forEach((f) => lines.push(`  ${f.path}`)); }
       if (!staged.length && !modified.length && !untracked.length) lines.push("nothing to commit, working tree clean");
       return ok(lines.join("\n"), s);
     }
+
     case "add": {
       const targets = rest.filter((t) => !t.startsWith("-"));
       if (targets.length === 0) return err("Nothing specified, nothing added.", s);

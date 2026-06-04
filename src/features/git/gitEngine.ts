@@ -360,12 +360,13 @@ Tick "I understand" above before running it. Recovery hint: 'git reflog' + 'git 
         return ok(`Switched to a new branch '${name}'`, s);
       }
       const name = rest.find((t) => !t.startsWith("-"));
-      if (!name) return err("usage: git switch <branch>", s);
+      if (!name) return err("usage: git switch <branch>  (use -c to create)", s);
       const b = s.branches.find((x) => x.name === name);
-      if (!b) return err(`fatal: invalid reference: ${name}`, s);
+      if (!b) return err(`fatal: invalid reference: ${name}\nhint: did you mean 'git switch -c ${name}' to create it?`, s);
       s.head = b.name; pushReflog(s, `checkout: switching to ${name}`);
       return ok(`Switched to branch '${name}'`, s);
     }
+
     case "restore": {
       const staged = rest.includes("--staged");
       const target = rest.filter((t) => !t.startsWith("-"));

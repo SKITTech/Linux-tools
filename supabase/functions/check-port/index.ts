@@ -53,6 +53,26 @@ function isBlockedHostname(host: string): boolean {
   return blocked.includes(host.toLowerCase());
 }
 
+function isPrivateIPv6(host: string): boolean {
+  const h = host.toLowerCase();
+  if (h === '::1' || h === '::') return true;
+  if (h.startsWith('fe80:') || h.startsWith('fe80::')) return true; // link-local
+  if (h.startsWith('fc') || h.startsWith('fd')) return true; // ULA
+  if (h.startsWith('ff')) return true; // multicast
+  if (h.startsWith('::ffff:')) {
+    const v4 = h.slice(7);
+    if (/^(\d{1,3}\.){3}\d{1,3}$/.test(v4)) return isPrivateIPv4(v4);
+  }
+  if (h.startsWith('64:ff9b::')) return true; // NAT64
+  if (h.startsWith('2001:db8')) return true; // documentation
+  return false;
+}
+
+function isPrivateAddress(ip: string): boolean {
+  if (/^(\d{1,3}\.){3}\d{1,3}$/.test(ip)) return isPrivateIPv4(ip);
+  return isPrivateIPv6(ip);
+}
+
 function validateHost(host: string): { valid: boolean; error?: string; isIPv6: boolean } {
   if (isBlockedHostname(host)) {
     return { valid: false, error: 'Scanning internal/private addresses is not allowed', isIPv6: false };
@@ -63,7 +83,7 @@ function validateHost(host: string): { valid: boolean; error?: string; isIPv6: b
   const domainPattern = /^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)*[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/;
 
   if (ipv6Pattern.test(host)) {
-    if (host === '::1' || host.toLowerCase().startsWith('fe80:') || host.toLowerCase().startsWith('fc') || host.toLowerCase().startsWith('fd')) {
+    if (isPrivateIPv6(host)) {
       return { valid: false, error: 'Scanning internal/private addresses is not allowed', isIPv6: true };
     }
     return { valid: true, isIPv6: true };
@@ -85,6 +105,33 @@ function validateHost(host: string): { valid: boolean; error?: string; isIPv6: b
   }
 
   return { valid: false, error: 'Invalid hostname or IP address', isIPv6: false };
+}
+
+// Resolve a domain to IPs and ensure none point to private/internal ranges
+// (DNS-rebinding / DNS-based SSRF defense). Literal IPs are passed through
+// because validateHost() already gated them.
+async function resolveAndValidateHost(host: string): Promise<{ ok: boolean; ip?: string; isIPv6?: boolean; error?: string }> {
+  if (/^(\d{1,3}\.){3}\d{1,3}$/.test(host)) return { ok: true, ip: host, isIPv6: false };
+  if (host.includes(':')) return { ok: true, ip: host, isIPv6: true };
+
+  const records: string[] = [];
+  for (const type of ['A', 'AAAA'] as const) {
+    try {
+      const r = await Deno.resolveDns(host, type);
+      records.push(...r);
+    } catch {
+      // ignore — record type may not exist
+    }
+  }
+  if (records.length === 0) return { ok: false, error: 'Unable to resolve hostname' };
+  for (const ip of records) {
+    if (isPrivateAddress(ip)) {
+      return { ok: false, error: 'Hostname resolves to an internal/private address' };
+    }
+  }
+  const v4 = records.find((r) => /^(\d{1,3}\.){3}\d{1,3}$/.test(r));
+  const chosen = v4 ?? records[0];
+  return { ok: true, ip: chosen, isIPv6: !v4 };
 }
 
 // --- Rate Limiting ---
@@ -149,12 +196,20 @@ async function checkPort(host: string, port: number, timeout: number = 5000): Pr
       return { host, port, status: 'error', error: hostValidation.error };
     }
 
+    // DNS-based SSRF defense: resolve and ensure no resolved IP is private.
+    const resolved = await resolveAndValidateHost(host);
+    if (!resolved.ok || !resolved.ip) {
+      return { host, port, status: 'error', error: resolved.error || 'Hostname resolution blocked' };
+    }
+
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => reject(new Error('Connection timeout')), timeout);
     });
 
+    // Connect to the resolved IP (not the original hostname) to prevent
+    // DNS rebinding between validation and connect.
     const connectPromise = (async () => {
-      const conn = await Deno.connect({ hostname: host, port, transport: 'tcp' });
+      const conn = await Deno.connect({ hostname: resolved.ip!, port, transport: 'tcp' });
       conn.close();
       return conn;
     })();
@@ -190,9 +245,16 @@ serve(async (req) => {
   }
 
   try {
-    // Extract client IP for rate limiting
+    // Extract client IP for rate limiting. Use the LAST entry of
+    // x-forwarded-for — Supabase's edge appends the real client IP at the
+    // end, so reading the rightmost value prevents trivial spoofing via a
+    // forged left-most header value. cf-connecting-ip is preferred when
+    // present (set by Cloudflare, not user-controllable end-to-end).
+    const xff = req.headers.get('x-forwarded-for') ?? '';
+    const xffParts = xff.split(',').map((s) => s.trim()).filter(Boolean);
     const clientIP =
-      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      req.headers.get('cf-connecting-ip') ||
+      (xffParts.length > 0 ? xffParts[xffParts.length - 1] : '') ||
       req.headers.get('x-real-ip') ||
       'unknown';
 

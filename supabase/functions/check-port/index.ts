@@ -196,12 +196,20 @@ async function checkPort(host: string, port: number, timeout: number = 5000): Pr
       return { host, port, status: 'error', error: hostValidation.error };
     }
 
+    // DNS-based SSRF defense: resolve and ensure no resolved IP is private.
+    const resolved = await resolveAndValidateHost(host);
+    if (!resolved.ok || !resolved.ip) {
+      return { host, port, status: 'error', error: resolved.error || 'Hostname resolution blocked' };
+    }
+
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => reject(new Error('Connection timeout')), timeout);
     });
 
+    // Connect to the resolved IP (not the original hostname) to prevent
+    // DNS rebinding between validation and connect.
     const connectPromise = (async () => {
-      const conn = await Deno.connect({ hostname: host, port, transport: 'tcp' });
+      const conn = await Deno.connect({ hostname: resolved.ip!, port, transport: 'tcp' });
       conn.close();
       return conn;
     })();

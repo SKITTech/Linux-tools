@@ -7,14 +7,15 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { AlertTriangle, RotateCcw, Terminal as TermIcon, GitBranch, Sparkles, Wrench, FileText, Save, Maximize2, Minimize2 } from "lucide-react";
+import { AlertTriangle, RotateCcw, Terminal as TermIcon, GitBranch, Sparkles, Wrench, FileText, Save, Maximize2, Minimize2, ExternalLink, GraduationCap, RefreshCw } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { runGit, isDestructive, EMPTY_STATE, type RepoState } from "./gitEngine";
 
 const HISTORY_KEY = "git.term.history.v1";
 const STATE_KEY = "git.term.state.v1";
 
-export default function Terminal() {
+function SandboxTerminal() {
   const [lines, setLines] = useState<{ kind: "prompt" | "out" | "err"; text: string }[]>([
     { kind: "out", text: "Git Sandbox v1.1 — simulated environment (allowlisted git + safe file builtins, no host access).\nType 'help' for the full command list. Try 'load-sample' or 'load-conflict' to start." },
   ]);

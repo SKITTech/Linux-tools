@@ -220,3 +220,54 @@ function SandboxTerminal() {
     </div>
   );
 }
+
+const LGB_URL = "https://learngitbranching.js.org/?NODEMO";
+
+function InteractiveTutor() {
+  const [key, setKey] = useState(0);
+  const [fullscreen, setFullscreen] = useState(false);
+  return (
+    <div className={fullscreen ? "fixed inset-0 z-50 bg-background p-4 flex flex-col" : "flex flex-col h-[calc(100vh-220px)]"}>
+      <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <GraduationCap className="w-4 h-4 text-primary" />
+          <h2 className="text-lg font-semibold">Learn Git Branching</h2>
+          <Badge variant="outline" className="text-[10px]">Interactive tutor</Badge>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={() => setKey((k) => k + 1)}><RefreshCw className="w-3.5 h-3.5 mr-1" />Reload</Button>
+          <Button size="sm" variant="outline" onClick={() => window.open(LGB_URL, "_blank", "noopener,noreferrer")}><ExternalLink className="w-3.5 h-3.5 mr-1" />Open in new tab</Button>
+          <Button size="sm" variant="outline" onClick={() => setFullscreen((v) => !v)}>
+            {fullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+          </Button>
+        </div>
+      </div>
+      <Card className="p-3 mb-3 bg-primary/5 border-primary/30 text-xs text-muted-foreground">
+        Interactive Git visualiser — type real commands (<code>git commit</code>, <code>git branch</code>, <code>git merge</code>, <code>git rebase</code>, <code>git cherry-pick</code>…) and watch the commit graph update. Includes guided levels. If the embed fails to load (some networks block third-party frames), use "Open in new tab".
+      </Card>
+      <Card className="flex-1 overflow-hidden p-0">
+        <iframe
+          key={key}
+          src={LGB_URL}
+          title="Learn Git Branching"
+          className="w-full h-full border-0 bg-white"
+          allow="clipboard-read; clipboard-write; fullscreen"
+        />
+      </Card>
+    </div>
+  );
+}
+
+export default function Terminal() {
+  return (
+    <Tabs defaultValue="sandbox" className="w-full">
+      <TabsList className="mb-3">
+        <TabsTrigger value="sandbox"><TermIcon className="w-3.5 h-3.5 mr-1" />Sandbox</TabsTrigger>
+        <TabsTrigger value="tutor"><GraduationCap className="w-3.5 h-3.5 mr-1" />Interactive Tutor</TabsTrigger>
+      </TabsList>
+      <TabsContent value="sandbox" className="mt-0"><SandboxTerminal /></TabsContent>
+      <TabsContent value="tutor" className="mt-0"><InteractiveTutor /></TabsContent>
+    </Tabs>
+  );
+}
+

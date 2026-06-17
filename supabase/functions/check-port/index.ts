@@ -245,9 +245,16 @@ serve(async (req) => {
   }
 
   try {
-    // Extract client IP for rate limiting
+    // Extract client IP for rate limiting. Use the LAST entry of
+    // x-forwarded-for — Supabase's edge appends the real client IP at the
+    // end, so reading the rightmost value prevents trivial spoofing via a
+    // forged left-most header value. cf-connecting-ip is preferred when
+    // present (set by Cloudflare, not user-controllable end-to-end).
+    const xff = req.headers.get('x-forwarded-for') ?? '';
+    const xffParts = xff.split(',').map((s) => s.trim()).filter(Boolean);
     const clientIP =
-      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      req.headers.get('cf-connecting-ip') ||
+      (xffParts.length > 0 ? xffParts[xffParts.length - 1] : '') ||
       req.headers.get('x-real-ip') ||
       'unknown';
 

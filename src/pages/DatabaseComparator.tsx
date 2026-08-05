@@ -153,7 +153,7 @@ const DatabaseComparator = () => {
                   className="gap-1.5 text-xs"
                   onClick={async () => {
                     try {
-                      const res = await fetch("/samples/kvm4virtualizor-sample.sql");
+                      const res = await fetch("/samples/latest_virtualizor.sql");
                       const text = await res.text();
                       setOriginalSQL(text);
                       toast.success("Sample structure loaded");

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Aug 01, 2026 at 01:12 PM
+-- Generation Time: Oct 22, 2026 at 01:16 PM
 -- Server version: 5.5.62
 -- PHP Version: 7.4.33
 
@@ -228,7 +228,29 @@ CREATE TABLE `admin_acl` (
   `act_deletevpc` tinyint(4) NOT NULL DEFAULT '0',
   `act_secgroups` tinyint(4) NOT NULL DEFAULT '0',
   `act_vpc_natgw` tinyint(4) NOT NULL DEFAULT '0',
-  `act_vpc_peering` tinyint(4) NOT NULL DEFAULT '0'
+  `act_vpc_peering` tinyint(4) NOT NULL DEFAULT '0',
+  `act_editvm` tinyint(4) NOT NULL DEFAULT '0',
+  `act_mcp_config` tinyint(4) NOT NULL DEFAULT '0',
+  `act_security_center` tinyint(4) NOT NULL DEFAULT '0',
+  `act_list_baremetals` tinyint(4) NOT NULL DEFAULT '0',
+  `act_add_baremetal` tinyint(4) NOT NULL DEFAULT '0',
+  `act_edit_baremetal` tinyint(4) NOT NULL DEFAULT '0',
+  `act_delete_baremetal` tinyint(4) NOT NULL DEFAULT '0',
+  `act_manage_baremetal` tinyint(4) NOT NULL DEFAULT '0',
+  `act_list_datacenters` tinyint(4) NOT NULL DEFAULT '0',
+  `act_add_datacenter` tinyint(4) NOT NULL DEFAULT '0',
+  `act_edit_datacenter` tinyint(4) NOT NULL DEFAULT '0',
+  `act_delete_datacenter` tinyint(4) NOT NULL DEFAULT '0',
+  `act_list_dcfloors` tinyint(4) NOT NULL DEFAULT '0',
+  `act_add_dcfloors` tinyint(4) NOT NULL DEFAULT '0',
+  `act_edit_dcfloors` tinyint(4) NOT NULL DEFAULT '0',
+  `act_delete_dc_floors` tinyint(4) NOT NULL DEFAULT '0',
+  `act_list_dcracks` tinyint(4) NOT NULL DEFAULT '0',
+  `act_add_dcracks` tinyint(4) NOT NULL DEFAULT '0',
+  `act_edit_dcracks` tinyint(4) NOT NULL DEFAULT '0',
+  `act_delete_dc_racks` tinyint(4) NOT NULL DEFAULT '0',
+  `act_view_firewall_rules` tinyint(4) NOT NULL DEFAULT '0',
+  `act_revoke_access` tinyint(4) NOT NULL DEFAULT '0'
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -256,6 +278,7 @@ CREATE TABLE `admin_notes` (
 CREATE TABLE `api` (
   `idapi` int(10) NOT NULL,
   `uid` int(10) NOT NULL DEFAULT '0',
+  `type` varchar(20) NOT NULL DEFAULT '',
   `apikey` varchar(50) NOT NULL DEFAULT '',
   `apipass` varchar(50) NOT NULL DEFAULT '',
   `ip` text,
@@ -336,6 +359,8 @@ CREATE TABLE `backup_plans` (
   `run_day` varchar(10) NOT NULL,
   `run_date` varchar(10) NOT NULL,
   `rotation` int(10) NOT NULL,
+  `rotation_chain` int(10) NOT NULL DEFAULT '0',
+  `rotation_inc` int(10) NOT NULL DEFAULT '0',
   `backup_limit` int(10) NOT NULL DEFAULT '0',
   `restore_limit` int(10) NOT NULL DEFAULT '0',
   `enable_enduser_backup_servers` tinyint(4) DEFAULT '0',
@@ -1879,13 +1904,16 @@ ALTER TABLE `api`
 -- Indexes for table `api_log`
 --
 ALTER TABLE `api_log`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `time` (`time`) USING BTREE,
+  ADD KEY `uid` (`uid`) USING BTREE;
 
 --
 -- Indexes for table `backups`
 --
 ALTER TABLE `backups`
-  ADD PRIMARY KEY (`bkid`);
+  ADD PRIMARY KEY (`bkid`),
+  ADD KEY `vpsid` (`vpsid`) USING BTREE;
 
 --
 -- Indexes for table `backup_plans`
@@ -1903,7 +1931,15 @@ ALTER TABLE `backup_servers`
 -- Indexes for table `bandwidth`
 --
 ALTER TABLE `bandwidth`
-  ADD UNIQUE KEY `vpsid` (`vpsid`,`vpcid`,`device`,`date`,`time`);
+  ADD UNIQUE KEY `vpsid` (`vpsid`,`vpcid`,`device`,`date`,`time`),
+  ADD KEY `date` (`date`) USING BTREE;
+
+--
+-- Indexes for table `cloud_bandwidth`
+--
+ALTER TABLE `cloud_bandwidth`
+  ADD KEY `cloud_uid_date` (`cloud_uid`,`date`) USING BTREE,
+  ADD KEY `date` (`date`) USING BTREE;
 
 --
 -- Indexes for table `console_sessions`
@@ -1997,7 +2033,8 @@ ALTER TABLE `ippool`
 ALTER TABLE `ips`
   ADD PRIMARY KEY (`ipid`),
   ADD KEY `vpsid` (`vpsid`),
-  ADD KEY `ippid_index` (`ippid`);
+  ADD KEY `ippid_index` (`ippid`),
+  ADD KEY `ip` (`ip`) USING BTREE;
 
 --
 -- Indexes for table `ip_logs`
@@ -2021,13 +2058,24 @@ ALTER TABLE `load_balancer`
 -- Indexes for table `logs_admin`
 --
 ALTER TABLE `logs_admin`
-  ADD PRIMARY KEY (`actid`);
+  ADD PRIMARY KEY (`actid`),
+  ADD KEY `time` (`time`) USING BTREE;
+
+--
+-- Indexes for table `logs_login`
+--
+ALTER TABLE `logs_login`
+  ADD KEY `ip_time` (`ip`,`time`) USING BTREE,
+  ADD KEY `username_time` (`username`,`time`) USING BTREE,
+  ADD KEY `time` (`time`) USING BTREE;
 
 --
 -- Indexes for table `logs_vps`
 --
 ALTER TABLE `logs_vps`
-  ADD PRIMARY KEY (`actid`);
+  ADD PRIMARY KEY (`actid`),
+  ADD KEY `time` (`time`) USING BTREE,
+  ADD KEY `vpsid` (`vpsid`) USING BTREE;
 
 --
 -- Indexes for table `media_groups`
@@ -2039,7 +2087,9 @@ ALTER TABLE `media_groups`
 -- Indexes for table `notifications`
 --
 ALTER TABLE `notifications`
-  ADD PRIMARY KEY (`nid`);
+  ADD PRIMARY KEY (`nid`),
+  ADD KEY `seen_time` (`seen_time`) USING BTREE,
+  ADD KEY `ins_time` (`ins_time`) USING BTREE;
 
 --
 -- Indexes for table `os`
@@ -2148,6 +2198,13 @@ ALTER TABLE `ssh_keys`
   ADD UNIQUE KEY `uuid` (`uuid`);
 
 --
+-- Indexes for table `status`
+--
+ALTER TABLE `status`
+  ADD KEY `vpsid_time` (`vpsid`,`time`) USING BTREE,
+  ADD KEY `time` (`time`) USING BTREE;
+
+--
 -- Indexes for table `storage`
 --
 ALTER TABLE `storage`
@@ -2160,10 +2217,24 @@ ALTER TABLE `storage_servers`
   ADD UNIQUE KEY `stid` (`stid`,`serid`,`sgid`);
 
 --
+-- Indexes for table `system_alerts`
+--
+ALTER TABLE `system_alerts`
+  ADD KEY `time` (`time`) USING BTREE;
+
+--
 -- Indexes for table `tasks`
 --
 ALTER TABLE `tasks`
-  ADD PRIMARY KEY (`actid`);
+  ADD PRIMARY KEY (`actid`),
+  ADD KEY `action_prefix` (`action`(32)),
+  ADD KEY `vpsid_actid` (`vpsid`,`actid`) USING BTREE,
+  ADD KEY `uid` (`uid`) USING BTREE,
+  ADD KEY `serid` (`serid`) USING BTREE,
+  ADD KEY `slaveactid_serid` (`slaveactid`,`serid`) USING BTREE,
+  ADD KEY `ended` (`ended`) USING BTREE,
+  ADD KEY `started` (`started`) USING BTREE,
+  ADD KEY `time` (`time`) USING BTREE;
 
 --
 -- Indexes for table `tax_rules`
@@ -2207,7 +2278,8 @@ ALTER TABLE `usage`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`uid`),
-  ADD KEY `email` (`email`);
+  ADD KEY `email` (`email`),
+  ADD KEY `pid` (`pid`) USING BTREE;
 
 --
 -- Indexes for table `user_meta`
@@ -2287,7 +2359,9 @@ ALTER TABLE `vpc_tunnel`
 --
 ALTER TABLE `vps`
   ADD PRIMARY KEY (`vpsid`),
-  ADD KEY `uid` (`uid`) USING BTREE;
+  ADD KEY `uid` (`uid`) USING BTREE,
+  ADD KEY `serid` (`serid`) USING BTREE,
+  ADD KEY `uuid` (`uuid`) USING BTREE;
 
 --
 -- Indexes for table `vpsbackup_settings`
